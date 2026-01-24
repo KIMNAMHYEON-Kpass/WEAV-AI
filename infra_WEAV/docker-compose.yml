@@ -1,6 +1,8 @@
 # WEAV AI 백엔드 인프라 - 프로덕션급 Docker Compose 설정
 # 맥미니 + 외장하드 + Cloudflare Tunnel 기반
 
+name: weavai  # 프로젝트 이름 (컨테이너 그룹명)
+
 # 내부 네트워크 정의 (서비스 간 통신용)
 networks:
   weavai_network:
@@ -130,6 +132,12 @@ services:
       AI_PROVIDER_DEFAULT: ${AI_PROVIDER_DEFAULT:-openai}
       MAX_TEXT_CHARS: ${MAX_TEXT_CHARS:-8000}
       MAX_OUTPUT_TOKENS: ${MAX_OUTPUT_TOKENS:-1024}
+      # Billing (PortOne)
+      USE_PORTONE: ${USE_PORTONE:-True}
+      USE_STRIPE: ${USE_STRIPE:-False}
+      PORTONE_API_SECRET: ${PORTONE_API_SECRET:-}
+      PORTONE_WEBHOOK_SECRET: ${PORTONE_WEBHOOK_SECRET:-}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
     # 디버그: Django 직접 접근을 위한 임시 호스트 포트 바인딩 (프로덕션에서는 제거)
     ports:
       - "127.0.0.1:8000:8000"
@@ -188,8 +196,23 @@ services:
       AI_PROVIDER_DEFAULT: ${AI_PROVIDER_DEFAULT:-openai}
       MAX_TEXT_CHARS: ${MAX_TEXT_CHARS:-8000}
       MAX_OUTPUT_TOKENS: ${MAX_OUTPUT_TOKENS:-1024}
-    command: celery -A weavai worker -l INFO --concurrency=4
+      # Billing (PortOne) - Celery task에서 결제 조회 API 호출용
+      USE_PORTONE: ${USE_PORTONE:-True}
+      PORTONE_API_SECRET: ${PORTONE_API_SECRET:-}
+    command: celery -A weavai worker -l INFO --concurrency=4 -n celery@%h
     # 워커는 포트 노출하지 않음
+    healthcheck:
+      # Celery inspect ping으로 worker 생존 확인 (broker 왕복 검증)
+      # -n celery@%h로 노드명 고정했으므로 -d celery@$$HOSTNAME으로 정확히 매칭
+      test:
+        [
+          "CMD-SHELL",
+          "celery -A weavai inspect ping -t 5 -d celery@$$HOSTNAME | grep -q pong || exit 1"
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
   # ===== 프론트엔드 레이어 =====
 

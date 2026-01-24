@@ -43,6 +43,33 @@ class User(AbstractUser):
         help_text='Gemini API 키 보유 여부'
     )
 
+    # Stripe 결제 정보
+    stripe_customer_id = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True,
+        db_index=True,
+        help_text='Stripe Customer ID'
+    )
+    stripe_subscription_id = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True,
+        db_index=True,
+        help_text='Stripe Subscription ID'
+    )
+    membership_status = models.CharField(
+        max_length=50,
+        default='active',
+        choices=[
+            ('active', '활성'),
+            ('past_due', '연체'),
+            ('canceled', '취소됨'),
+            ('trialing', '체험 중'),
+        ],
+        help_text='멤버십 상태'
+    )
+
     # 추가 메타데이터
     photo_url = models.URLField(
         blank=True,

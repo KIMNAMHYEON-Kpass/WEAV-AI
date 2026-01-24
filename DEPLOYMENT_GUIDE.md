@@ -92,8 +92,8 @@ cloudflared tunnel route dns weavai www.weavai.hub
 ## 5단계: 로컬 서버 실행 확인
 
 ```bash
-# infra 디렉토리로 이동
-cd infra
+# infra_WEAV 디렉토리로 이동
+cd infra_WEAV
 
 # Docker Compose로 서비스 시작
 docker compose up -d
@@ -137,7 +137,7 @@ npm run build
 
 ### Nginx 설정 업데이트
 
-`infra/nginx/conf.d/weavai.conf` 파일에 프론트엔드 서빙 설정 추가:
+`infra_WEAV/nginx/conf.d/weavai.conf` 파일에 프론트엔드 서빙 설정 추가:
 
 ```nginx
 server {
@@ -187,7 +187,7 @@ curl https://weavai.hub/api/v1/health/
 
 ## 9단계: 프로덕션 환경 변수 설정
 
-`infra/.env` 파일에 다음 설정이 포함되어 있어야 합니다:
+`infra_WEAV/.env` 파일에 다음 설정이 포함되어 있어야 합니다:
 
 ```bash
 # Django 설정

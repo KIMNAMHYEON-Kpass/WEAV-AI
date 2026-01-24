@@ -35,11 +35,12 @@ class TextGenerationRequest(BaseModel):
 
 
 class ImageGenerationRequest(BaseModel):
-    """이미지 생성 요청 스키마 (추후 구현)"""
+    """이미지 생성 요청 스키마"""
 
     prompt: str = Field(..., min_length=1, max_length=1000)
     size: Optional[str] = Field("1024x1024", pattern=r'^\d+x\d+$')
     quality: Optional[str] = Field("standard", pattern=r'^(standard|hd)$')
+    model_id: Optional[str] = Field(None, max_length=100)  # 모델 ID (선택, nano-banana 등)
 
 
 class VideoGenerationRequest(BaseModel):

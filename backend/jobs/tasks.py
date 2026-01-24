@@ -39,7 +39,7 @@ def run_ai_job(self, job_id: str) -> None:
     job.save(update_fields=['status', 'updated_at'])
 
     model_id = (job.model_id or '').lower()
-    if 'image' in model_id or 'dall-e' in model_id or 'gpt-image' in model_id:
+    if 'image' in model_id or 'dall-e' in model_id or 'gpt-image' in model_id or 'banana' in model_id:
         model_type = 'image'
     elif 'video' in model_id or 'sora' in model_id or 'veo' in model_id:
         model_type = 'video'
@@ -47,10 +47,15 @@ def run_ai_job(self, job_id: str) -> None:
         model_type = 'text'
 
     try:
+        # arguments에 model_id 추가 (이미지/비디오 생성 시 모델 선택용)
+        arguments = dict(job.arguments or {})
+        if job.model_id:
+            arguments['model_id'] = job.model_id
+        
         ai_result = ai_router.route_and_run(
             provider=job.provider,
             model_type=model_type,
-            arguments=job.arguments or {}
+            arguments=arguments
         )
     except (AIProviderError, AIRequestError, AIQuotaExceededError) as e:
         job.status = 'FAILED'

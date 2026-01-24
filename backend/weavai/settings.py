@@ -211,10 +211,23 @@ DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
 OPENAI_API_KEY = config('OPENAI_API_KEY', default='')
 GEMINI_API_KEY = config('GEMINI_API_KEY', default='')
 
-# Stripe (Payments)
+# Billing: PortOne (기본) / Stripe (선택)
+USE_PORTONE = config('USE_PORTONE', default=True, cast=bool)
+USE_STRIPE = config('USE_STRIPE', default=False, cast=bool)
+
+# PortOne (비밀키는 백엔드 전용)
+PORTONE_API_SECRET = config('PORTONE_API_SECRET', default='')
+PORTONE_WEBHOOK_SECRET = config('PORTONE_WEBHOOK_SECRET', default='')
+
+# Stripe (USE_STRIPE=True 시에만 사용)
 STRIPE_PUBLIC_KEY = config('STRIPE_PUBLIC_KEY', default='')
 STRIPE_SECRET_KEY = config('STRIPE_SECRET_KEY', default='')
 STRIPE_WEBHOOK_SECRET = config('STRIPE_WEBHOOK_SECRET', default='')
+STRIPE_PRICE_STANDARD = config('STRIPE_PRICE_STANDARD', default='')
+STRIPE_PRICE_PREMIUM = config('STRIPE_PRICE_PREMIUM', default='')
+
+# Frontend URL (결제 후 리다이렉트용)
+FRONTEND_URL = config('FRONTEND_URL', default='http://localhost:3000')
 
 # 디버그: 상세한 로깅 설정 (디버그 중에만 활성화)
 LOGGING = {

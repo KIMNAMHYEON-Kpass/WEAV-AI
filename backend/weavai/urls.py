@@ -18,6 +18,7 @@ urlpatterns = [
         path('jobs/', include('jobs.urls')),
         path('chats/', include('chats.urls')),
         path('storage/', include('weavai.apps.storage.urls')),
+        path('billing/', include('payments.urls')),  # 결제 API
     ])),
 
     # 향후 확장 가능

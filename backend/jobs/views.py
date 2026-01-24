@@ -40,6 +40,21 @@ def list_or_create_jobs(request):
     # POST
     serializer = JobCreateSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
+    
+    # 이미지/비디오 생성은 프리미엄 기능 (멤버십 체크)
+    model_id = serializer.validated_data.get('model_id', '')
+    model_type = _model_type_from_model_id(model_id)
+    if model_type in ('image', 'video'):
+        if not request.user.can_use_premium_features:
+            return Response(
+                {
+                    'detail': '이미지/비디오 생성은 프리미엄 멤버십이 필요합니다.',
+                    'membership_required': True,
+                    'current_membership': request.user.membership_type,
+                },
+                status=status.HTTP_403_FORBIDDEN
+            )
+    
     active_count = Job.objects.filter(
         user=request.user,
         status__in=ACTIVE_STATUSES

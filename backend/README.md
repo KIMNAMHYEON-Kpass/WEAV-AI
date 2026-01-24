@@ -16,14 +16,14 @@ Nginx → Django + DRF → PostgreSQL (User, Folder, ChatSession, Job, Artifact)
 ### Docker Compose로 실행 (권장)
 
 ```bash
-cd infra
+cd infra_WEAV
 docker compose up -d
 ```
 
 ### 마이그레이션
 
 ```bash
-cd infra
+cd infra_WEAV
 docker compose run --rm --entrypoint "" api python manage.py migrate
 ```
 

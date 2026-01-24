@@ -21,7 +21,8 @@ dist/
 .env.production.local
 # But allow .env.example files
 !.env.example
-!infra/.env.example
+!backend/env.example
+!infra_WEAV/.env.example
 
 # IDE and Editor
 .vscode/
@@ -47,7 +48,7 @@ yarn-debug.log*
 yarn-error.log*
 lerna-debug.log*
 build.log
-infra/build.log
+infra_WEAV/build.log
 
 # Runtime data
 pids/
@@ -63,11 +64,29 @@ backend/logs/
 backend/.env
 
 # Docker volumes (local development)
-infra/.env
+infra_WEAV/.env
 
 # MinIO data (external drive or local)
-infra/minio-data/
+infra_WEAV/minio-data/
 # /Volumes/WEAVAI_2T/minio-data/  # Uncomment if using different path
+
+# Firebase service account keys (민감 정보)
+**/firebase-*.json
+**/*firebase*service*.json
+**/*-firebase-admin*.json
+
+# SSL/TLS certificates
+*.pem
+*.key
+*.crt
+*.cert
+*.p12
+*.pfx
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
 
 # Celery
 celerybeat-schedule

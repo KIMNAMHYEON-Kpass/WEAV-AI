@@ -1,0 +1,297 @@
+# 🚦 PortOne 결제 Go/No-Go 체크리스트
+
+## 공식 스펙 정합성 (요약)
+
+- **웹훅 raw body 검증**: `request.body` → decode → `signed_payload = "{id}.{ts}.{payload_str}"` — PortOne 서버 SDK 요구사항과 일치.
+- **V2 API 인증/결제 조회**: `Authorization: PortOne {API_SECRET}`, `GET /payments/{paymentId}` — V2 문서 흐름과 부합.
+- **콘솔 "저장 후 호출 테스트" / Content-Type**: URL 저장 필수, `application/json`만 허용 — V2 웹훅 가이드 및 2024-04-25 이후 정책과 부합.
+- **(선택) IP 필터링**: 콘솔 화이트리스트(CIDR) 안내 있음. IP 변경 가능하므로 allowlist 사용 시 정기 점검 프로세스 권장.
+
+---
+
+## A. 인프라/설정
+
+### 1. 마이그레이션 실행
+```bash
+cd infra_WEAV
+docker compose run --rm --entrypoint "" api python manage.py migrate
+```
+
+### 2. 환경 변수 설정
+
+**프론트엔드 (루트 `.env`)**
+```bash
+VITE_PORTONE_STORE_ID=store-xxx
+VITE_PORTONE_CHANNEL_KEY=channel-key-xxx
+```
+
+**백엔드 (`infra_WEAV/.env`)**
+```bash
+USE_PORTONE=True
+USE_STRIPE=False
+PORTONE_API_SECRET=your-portone-api-secret
+PORTONE_WEBHOOK_SECRET=your-portone-webhook-secret
+FRONTEND_URL=http://localhost:3000
+```
+
+### 3. 컨테이너 재기동
+```bash
+cd infra_WEAV
+docker compose down
+docker compose up -d --build
+```
+
+### 4. Celery 워커 실행 확인
+```bash
+# 워커 컨테이너 상태 확인
+docker compose ps worker
+
+# 워커 로그 확인 (준비 상태)
+docker compose logs worker | grep -i "ready"
+
+# 워커가 실행 중이어야 complete 누락 자동 복구가 동작함
+```
+
+### 5. PortOne 콘솔 설정
+- [ ] Store ID, Channel Key 확인
+- [ ] API Secret 발급
+- [ ] Webhook Secret 발급
+- [ ] 웹훅 URL 등록: `https://yourdomain.com/api/v1/billing/webhook/`
+- [ ] **⚠️ 중요**: URL 저장 후 **"호출 테스트"** 버튼으로 실제 수신 확인
+  - "저장 안 하고 테스트" 시도 시 실패 (PortOne 문서 주의사항)
+
+---
+
+## B. E2E 테스트 (6개) — 합격 판정 기준
+
+각 시나리오별 **PASS 조건**: 아래 DB/API/로그 기준을 만족하면 PASS.
+
+---
+
+### 1. 정상 결제 플로우
+
+**조작**: 로그인 → `/pricing` → 플랜 선택 → "결제하기" → PortOne 결제창 결제 완료 → `/billing/success` 리다이렉트
+
+| 항목 | PASS 기준 |
+|------|-----------|
+| **PaymentAttempt** | `status = 'paid'`, `plan` = 선택한 플랜, `amount` = 해당 플랜 금액 |
+| **User** | `membership_type` = 선택한 플랜 (`standard` / `premium`), `membership_status = 'active'`, `membership_expires_at` = 결제 시점 + 30일 |
+| **API** | `GET /api/v1/auth/profile/` 응답에 `membership_type`, `membership_expires_at`, `can_use_premium_features: true` 반영 |
+| **프론트** | `/billing/success` 표시, 이후 채팅에서 프리미엄 모델 사용 가능 |
+
+---
+
+### 2. 결제창 닫기 / 취소
+
+**조작**: 결제창에서 "취소" 또는 창 닫기 (결제 미완료)
+
+| 항목 | PASS 기준 |
+|------|-----------|
+| **User** | `membership_type = 'free'` 유지, `membership_status` 변화 없음 |
+| **PaymentAttempt** | 해당 `payment_id` 레코드: `status` = `'pending'` 유지 또는 `'canceled'` / `'failed'` (웹훅 수신 시) |
+| **DB** | `User` 테이블에 멤버십 관련 변경 없음 |
+
+---
+
+### 3. 금액 위변조 (플랜 바꿔치기 / 클라 조작)
+
+**조작**: `prepare`에서 `plan: 'premium'` 요청 후, 실제 결제는 `standard` 금액으로 수행(또는 역방향 조작 시도)
+
+| 항목 | PASS 기준 |
+|------|-----------|
+| **complete** | `GET /payments/{paymentId}` 조회 결과 `amount` ≠ 서버 플랜(`plan`) 기대 금액 → **차단** |
+| **응답** | `complete` API가 4xx + `"결제 금액이 일치하지 않습니다."` (또는 동일 의미 메시지) |
+| **User** | `membership_type`, `membership_expires_at` **변경 없음** (멤버십 미반영) |
+| **PaymentAttempt** | 해당 건 `status` = `'paid'`로 바뀌지 않거나, 멤버십 반영 로직 미수행 |
+
+---
+
+### 4. 서명 잘못된 웹훅
+
+**조작**: `webhook-signature` 헤더를 잘못된 값으로 설정한 POST 요청
+
+| 항목 | PASS 기준 |
+|------|-----------|
+| **HTTP** | **4xx** 응답 (400 등) |
+| **DB** | **변화 없음** (PaymentAttempt / User 업데이트 없음) |
+| **로그** | `"signature verification failed"` 또는 동일 의미 로그 |
+| **검증** | 서명 검증이 **raw payload** 기반으로 수행됨 (JSON 파싱 전 body 사용) |
+
+---
+
+### 5. 타임스탬프 리플레이 (5분 초과)
+
+**조작**: `webhook-timestamp`를 10분(또는 5분 초과) 전 값으로 설정한 요청
+
+| 항목 | PASS 기준 |
+|------|-----------|
+| **HTTP** | **4xx** 응답 |
+| **DB** | **변화 없음** |
+| **로그** | `"timestamp too old"` 또는 `"timestamp too old/too new"` 등 재전송/리플레이 방지 관련 로그 |
+
+---
+
+### 6. complete 누락 자동 복구 **(핵심)**
+
+**조작**: 결제 완료 직후 **브라우저 종료** 또는 네트워크 차단으로 **complete 호출 없음**
+
+| 항목 | PASS 기준 |
+|------|-----------|
+| **웹훅** | PortOne → 우리 서버 웹훅 **정상 수신** (2xx 응답) |
+| **Celery** | `verify_and_activate_membership` task **enqueue** → **실행** |
+| **결제 조회** | task 내부에서 `GET /payments/{paymentId}` 호출로 **재조회** |
+| **User** | 일정 시간 내(최대 retry 포함 ~3분) `membership_type` = 결제한 플랜, `membership_status = 'active'`, `membership_expires_at` = +30일 |
+| **PaymentAttempt** | `status = 'paid'` |
+| **워커** | Celery worker가 **PORTONE_API_SECRET** 환경변수로 조회 API 호출 가능해야 함 (이번 반영 핵심) |
+
+**PASS 판정**: complete를 호출하지 않았는데도, 웹훅 → task → 조회 API 경로로 멤버십이 자동 반영되면 PASS.
+
+---
+
+## C. 운영 전 최종 점검 (실패율/CS 좌우)
+
+### 1. 웹훅 raw body 검증 확인 ⚠️ 필수
+- [ ] 웹훅 수신 시 **JSON 파싱 전 raw body 문자열 그대로** 검증하는지 확인
+- [ ] 코드 확인: `backend/payments/views.py`의 `_verify_portone_webhook` 함수
+  - `payload_raw = request.body` (raw bytes)
+  - `payload_str = payload_raw.decode("utf-8")` (JSON 파싱 전 문자열)
+  - `signed_payload = f"{webhook_id}.{webhook_timestamp}.{payload_str}"` (raw body 그대로 사용)
+- [ ] PortOne SDK 요구사항: "JSON 파싱 전 문자열 그대로" 준수 ✅
+
+### 2. Celery 워커 실행 확인 ⚠️ 필수
+- [ ] `docker compose ps`로 `weavai_worker` 컨테이너가 `Up` 상태인지 확인
+- [ ] `docker compose logs worker | grep -i "ready"` 로 워커 준비 상태 확인
+- [ ] **워커가 죽어 있으면 complete 누락 자동 복구가 무력화됨** (관측/알람 권장)
+- [ ] Celery worker 환경변수에 `PORTONE_API_SECRET` 포함 확인
+
+### 3. PortOne 콘솔 호출 테스트 ⚠️ 필수
+- [ ] PortOne 콘솔에서 **웹훅 URL 저장 후** "호출 테스트" 버튼 클릭
+- [ ] **주의**: "저장 안 하고 테스트" 시도 시 실패 (URL 저장 필수)
+- [ ] 서버 로그에서 웹훅 수신 확인
+- [ ] 서명 검증 통과 확인
+
+### 4. (선택) IP 필터링
+- [ ] PortOne V2 웹훅 IP 확인 (문서 참조)
+- [ ] Nginx/Firewall에서 해당 IP만 허용 설정 (변경 가능하므로 운영 프로세스 필요)
+
+### 5. 웹훅 헤더 확인
+- [ ] `webhook-id` 헤더 수신 확인
+- [ ] `webhook-timestamp` 헤더 수신 확인
+- [ ] `webhook-signature` 헤더 수신 확인 (형식: `v1,{base64_string}`)
+
+### 6. 결제 조회 API 확인
+- [ ] `GET /payments/{paymentId}` 형식 사용
+- [ ] Authorization: `PortOne {API_SECRET}` 헤더 확인
+- [ ] 응답 구조 처리 (직접 객체 / `{payment: {...}}` / `{payments: [...]}`)
+
+### 7. 서명 검증 확인
+- [ ] Base64 인코딩 사용 (hex 아님)
+- [ ] `signed_payload = "{webhook_id}.{webhook_timestamp}.{payload_string}"`
+- [ ] 타임스탬프 5분 이내 검증
+
+### 8. Content-Type 확인
+- [ ] `application/json`만 허용
+- [ ] 다른 Content-Type 요청 시 400 응답
+
+---
+
+## D. 모니터링 포인트
+
+### 로그 확인
+- [ ] 웹훅 수신 로그: `PortOne webhook: payment marked as paid, task enqueued`
+- [ ] Celery task 실행 로그: `verify_and_activate_membership: 멤버십 활성화 완료`
+- [ ] 결제 조회 API 호출 로그: `PortOne get_payment`
+- [ ] 에러 로그: 서명 검증 실패, 타임스탬프 오류 등
+
+### 데이터베이스 확인
+- [ ] `PaymentAttempt` 레코드 생성 확인
+- [ ] `status` 업데이트 확인 (`pending` → `paid`)
+- [ ] `User.membership_type`, `membership_expires_at` 반영 확인
+
+---
+
+## ✅ Go/No-Go 합격 기준 (PASS/FAIL)
+
+아래 **1·2·3**을 모두 PASS로 판정해야 **Go**입니다.
+
+---
+
+### 1) 마이그레이션
+
+| 조건 | PASS |
+|------|------|
+| `PaymentAttempt` 테이블 포함, 신규/변경 마이그레이션 적용 완료 | ✅ |
+| `docker compose run --rm --entrypoint "" api python manage.py migrate` **성공** (에러 0) | ✅ |
+
+---
+
+### 2) 웹훅 (콘솔 호출 테스트)
+
+**조건**: PortOne 콘솔에서 **URL 저장 후** "호출 테스트" 실행
+
+| 조건 | PASS |
+|------|------|
+| 우리 API가 **2xx** 응답 | ✅ |
+| 서버 로그에 `PortOne webhook: signature verification success` | ✅ |
+| 멱등: 동일 이벤트 재전송 시 `already processed (paymentId=...), skipping` 로그 (선택 확인) | ✅ |
+
+※ 서명 검증은 PortOne 공식 가이드(raw body 기반) 준수.
+
+---
+
+### 3) 결제 E2E (6개 시나리오)
+
+각 시나리오별 PASS 기준은 **위 B절 테이블**대로.
+
+| # | 시나리오 | PASS 요약 |
+|---|----------|-----------|
+| 1 | 정상 결제 | `PaymentAttempt.status=paid`, `User.membership_status=active`, 만료일 +30일 |
+| 2 | 결제창 닫기/취소 | 멤버십 변화 없음, attempt `pending` / `canceled` / `failed` |
+| 3 | 금액 위변조 | complete에서 **차단**, 멤버십 미반영 |
+| 4 | 서명 틀린 웹훅 | **4xx**, DB 변화 없음, raw payload 기반 검증 |
+| 5 | timestamp 리플레이 (5분 초과) | **차단** + 로그 기록 |
+| 6 | **complete 누락 자동 복구** | 웹훅 → Celery → `GET /payments/{paymentId}` → **멤버십 활성화** (worker에 `PORTONE_API_SECRET` 필요) |
+
+---
+
+## 🛠️ 운영 권장 3가지
+
+### 1. (선택) 서명 검증을 SDK로 단순화
+
+직접 구현도 가능하나, **raw body / 인코딩 / 헤더 파싱** 실수가 가장 많이 터지는 지점입니다.  
+PortOne **서버 SDK** 사용 시 이 부분을 흡수하므로, 운영 안정화에 유리합니다.
+
+### 2. NTP 시간 동기화 ⚠️ 권장
+
+**timestamp 5분 정책**을 쓰는 순간, 서버 시간이 틀어지면 **정상 웹훅도 실패**합니다.  
+운영 서버는 **NTP 동기화 필수** (실제 장애 포인트).
+
+### 3. 워커 모니터링 / 알람 ⚠️ 권장
+
+**complete 누락 자동 복구**는 **워커 생존**에 100% 의존합니다.
+
+- **최소**: 워커 **down 알람** + **큐 적체 알람**
+- 워커가 죽으면 자동 복구 무력화 → "결제했는데 멤버십 미반영" CS 증가
+
+---
+
+## 📋 실행 순서 (최종)
+
+1. **마이그레이션**  
+   `docker compose run --rm --entrypoint "" api python manage.py migrate`  
+   → 에러 0이면 1) PASS.
+
+2. **PortOne 콘솔 웹훅 URL 등록 + 호출 테스트**  
+   URL 저장 → 호출 테스트 → 2xx + `signature verification success` 로그 확인  
+   → 2) PASS.
+
+3. **E2E 테스트** (위 B절 6개 시나리오)  
+   각 시나리오별 DB/API/로그 기준으로 PASS 여부 판정  
+   → 6개 모두 PASS면 3) PASS.
+
+4. **운영 배포**  
+   1)·2)·3) **모두 PASS**이면 **Go**.
+
+---
+
+**마지막 업데이트**: 2026-01-24

@@ -91,6 +91,24 @@ export const userService = {
     },
     
     /**
+     * 사용자 프로필 정보 갱신 (멤버십 상태 등)
+     */
+    refreshUserProfile: async (): Promise<any> => {
+        try {
+            const response = await apiClient.get<Record<string, unknown>>('/api/v1/auth/profile/');
+            const userInfo = response?.user ? (response.user as Record<string, unknown>) : (response as Record<string, unknown>);
+            if (userInfo && typeof userInfo === 'object') {
+                if (!('uid' in userInfo) && 'username' in userInfo) (userInfo as any).uid = userInfo.username;
+                localStorage.setItem('weav_user_info', JSON.stringify(userInfo));
+            }
+            return userInfo;
+        } catch (error) {
+            console.error('[UserService] Failed to refresh user profile:', error);
+            throw error;
+        }
+    },
+    
+    /**
      * 로그아웃 시 토큰 정리
      */
     clearAuth: (): void => {

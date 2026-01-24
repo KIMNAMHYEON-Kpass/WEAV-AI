@@ -17,7 +17,7 @@ Mac Mini + 외장하드 기반 프로덕션급 AI 생성 서비스 인프라입�
 
 ### 1. 환경 변수
 
-`infra/.env` 생성:
+`infra_WEAV/.env` 생성:
 
 ```bash
 SECRET_KEY=your-secret-key
@@ -40,13 +40,13 @@ MINIO_ROOT_PASSWORD=your-password
 ### 2. MinIO 데이터 디렉터리
 
 ```bash
-mkdir -p infra/minio-data
+mkdir -p infra_WEAV/minio-data
 ```
 
 ### 3. 서비스 시작
 
 ```bash
-cd infra
+cd infra_WEAV
 docker compose up -d --build
 ```
 

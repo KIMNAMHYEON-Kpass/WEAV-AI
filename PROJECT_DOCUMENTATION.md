@@ -63,7 +63,7 @@
 ┌──────────────────┐          ┌──────────────────┐
 │   Django + DRF    │          │   React + Vite    │
 │   (백엔드 API)     │          │   (프론트엔드)      │
-│   - 포트: 8000    │          │   - 포트: 5173    │
+│   - 포트: 8000    │          │   - 포트: 3000    │
 └─────────┬─────────┘          └──────────────────┘
           │
           ├─── PostgreSQL (데이터베이스)
@@ -210,7 +210,7 @@ WEAV-AI/
 │   ├── Dockerfile             # 백엔드 이미지
 │   └── entrypoint.sh          # 컨테이너 시작 스크립트
 │
-├── infra/                      # 프로덕션 인프라 설정 (권장)
+├── infra_WEAV/                 # 프로덕션 인프라 설정 (권장)
 │   ├── docker-compose.yml     # 프로덕션 Docker Compose
 │   ├── nginx/                  # 프로덕션 Nginx 설정
 │   │   └── conf.d/
@@ -224,13 +224,13 @@ WEAV-AI/
 
 **레거시/로컬 개발용 파일**
 
-다음 파일들은 **로컬 개발 환경에서만 사용**되며, 프로덕션에서는 `infra/` 디렉토리의 설정을 사용합니다:
+다음 파일들은 **로컬 개발 환경에서만 사용**되며, 프로덕션에서는 `infra_WEAV/` 디렉토리의 설정을 사용합니다:
 
 - `backend/docker-compose.yml` - 로컬 개발용 Docker Compose (선택사항)
 - `backend/nginx/` - 로컬 개발용 Nginx 설정 (선택사항)
 - `backend/Dockerfile.backend` - 로컬 개발용 Dockerfile (선택사항)
 
-**프로덕션 배포 시**: `infra/docker-compose.yml`과 `infra/nginx/`를 사용하세요.
+**프로덕션 배포 시**: `infra_WEAV/docker-compose.yml`과 `infra_WEAV/nginx/`를 사용하세요.
 
 ```
 WEAV-AI/
@@ -273,7 +273,7 @@ WEAV-AI/
 │   ├── constants/             # 상수 정의
 │   └── types.ts               # TypeScript 타입
 │
-├── infra/                      # 인프라 설정
+├── infra_WEAV/                 # 인프라 설정
 │   ├── docker-compose.yml     # Docker Compose 설정
 │   ├── nginx/                  # Nginx 설정
 │   │   └── conf.d/
@@ -333,7 +333,7 @@ AWS_STORAGE_BUCKET_NAME=weavai-files
 AWS_S3_ENDPOINT_URL=http://minio:9000
 ```
 
-#### 인프라 환경 변수 (`infra/.env`)
+#### 인프라 환경 변수 (`infra_WEAV/.env`)
 ```bash
 # Docker Compose에서 사용하는 환경 변수
 SECRET_KEY=your-secret-key
@@ -378,7 +378,7 @@ VITE_API_BASE_URL=http://localhost:8080
 ### 3. 백엔드 실행 (Docker Compose)
 
 ```bash
-cd infra
+cd infra_WEAV
 docker compose up -d
 ```
 
@@ -393,7 +393,7 @@ docker compose up -d
 ### 4. 데이터베이스 마이그레이션
 
 ```bash
-cd infra
+cd infra_WEAV
 docker compose run --rm --entrypoint "" api python manage.py migrate
 ```
 > API 컨테이너 기본 entrypoint가 Gunicorn이므로, 마이그레이션 시 `--entrypoint ""`로 override.
@@ -411,7 +411,7 @@ npm run build
 
 ### 6. 접속
 
-- **프론트엔드**: http://localhost:5173
+- **프론트엔드**: http://localhost:3000
 - **백엔드 API**: http://localhost:8080/api/v1/
 - **MinIO 콘솔**: http://localhost:9001
 - **Django Admin**: http://localhost:8080/admin/
@@ -815,9 +815,9 @@ AI 생성 결과:
 
 ---
 
-## 📊 현재 진행 상황
+## 📊 현재 진행 상황 (2026-01-24 최신)
 
-### ✅ 완료된 기능
+### ✅ 완료된 기능 (프로덕션 준비 완료)
 
 #### 프론트엔드
 - [x] React + TypeScript + Vite, 다크/라이트 모드, 채팅·폴더 UI
@@ -832,16 +832,24 @@ AI 생성 결과:
 - [x] **커스텀 User** (`users.User`) + 멤버십 (free/standard/premium), API 키 상태
 - [x] **chats 앱**: Folder, ChatSession, 사용자별 CRUD API
 - [x] **Jobs 사용자 연결**: `GET/POST /jobs/`, `GET /jobs/<id>/`, **Celery 비동기**, 사용자당 최대 4건 동시, 429 초과 시
-- [x] Redis 캐시·Celery 브로커, MinIO, Nginx, Docker Compose
+- [x] **AI Gateway**: `/api/v1/chat/complete/` - 모든 AI 호출 백엔드 라우팅, 프리미엄 모델 멤버십 체크
+- [x] **AI 모델**: OpenAI (GPT-4o-mini, DALL-E 3, Sora 2), Gemini (1.5 Flash/Pro, 2.5 Flash Image)
+- [x] **결제**: PortOne 일회 30일권, prepare/complete/webhook, Celery 자동복구
+- [x] Redis 캐시·Celery 브로커, MinIO, Nginx (resolver + 변수), Docker Compose (infra_WEAV)
 - [x] Firebase 토큰 검증 → JWT + **User·멤버십 DB 저장**
 
 #### 인프라
 - [x] Docker, Docker Compose, Nginx, 마이그레이션, 헬스체크
 
-### 🔄 진행 중
+### ✅ 최근 완료 (2026-01-24)
 
-- [ ] Gemini API 연동 (코드 완료, 운영 테스트)
-- [ ] 실시간 작업 진행률 UI (선택)
+- ✅ **Gemini 이미지 생성 (Nano Banana)**: `gemini-2.5-flash-image` 모델 구현 완료, MinIO 업로드 및 Presigned URL 반환
+- ✅ **Nginx 설정 개선**: `resolver 127.0.0.11` + 변수 사용으로 "host not found" 문제 해결, 요청 시점 DNS 조회
+- ✅ **마이그레이션 안정화**: entrypoint.sh에 `--fake-initial` 옵션 추가로 기존 테이블 충돌 방지
+- ✅ **프로젝트 구조 정리**: `infra/` → `infra_WEAV/` 변경, 불필요한 문서 삭제 (PR_DESCRIPTION.md, MERGE_CHECKLIST.md, DOCKER_VOLUME_FIX.md)
+- ✅ **AI Gateway 완성**: 모든 AI 호출 백엔드 라우팅, 프리미엄 모델 멤버십 체크, 이미지/비디오 생성 멤버십 제한
+
+### 📋 향후 계획
 
 ### 📋 향후 계획
 
@@ -861,7 +869,7 @@ AI 생성 결과:
 - [ ] `DEBUG_PROPAGATE_EXCEPTIONS = False` (디버그 완료 후 제거)
 - [ ] `LOGGING` 설정: 프로덕션에 맞게 조정 (민감 정보 로깅 제거)
 
-### Docker Compose 설정 (`infra/docker-compose.yml`)
+### Docker Compose 설정 (`infra_WEAV/docker-compose.yml`)
 
 - [ ] `api` 서비스의 `ports` 섹션 제거 (디버그용 포트 바인딩)
   ```yaml
@@ -870,7 +878,7 @@ AI 생성 결과:
     - "127.0.0.1:8000:8000"
   ```
 
-### Nginx 설정 (`infra/nginx/conf.d/weavai.conf`)
+### Nginx 설정 (`infra_WEAV/nginx/conf.d/weavai.conf`)
 
 - [ ] `proxy_intercept_errors` 설정 검토
   - 디버그 중: `proxy_intercept_errors off` (Django 에러 확인용)
@@ -1032,9 +1040,9 @@ docker compose restart postgres
 docker compose exec api python -c "import os; print('OPENAI:', bool(os.getenv('OPENAI_API_KEY')))"
 
 # .env 파일 확인
-cat infra/.env | grep OPENAI_API_KEY
+cat infra_WEAV/.env | grep OPENAI_API_KEY
 
-# 주의: backend/.env와 infra/.env 모두 확인 필요
+# 주의: backend/.env와 infra_WEAV/.env 모두 확인 필요
 ```
 
 #### 4. 마이그레이션 오류
@@ -1049,7 +1057,7 @@ docker compose exec api python manage.py migrate
 #### 5. Nginx가 Django 에러를 가로채는 경우
 ```bash
 # Nginx 설정 확인
-cat infra/nginx/conf.d/weavai.conf | grep proxy_intercept_errors
+cat infra_WEAV/nginx/conf.d/weavai.conf | grep proxy_intercept_errors
 
 # 디버그 중에는 off로 설정
 # proxy_intercept_errors off;
@@ -1098,7 +1106,14 @@ cat infra/nginx/conf.d/weavai.conf | grep proxy_intercept_errors
 
 ## 📝 변경 이력
 
-### 2026-01-24
+### 2026-01-24 (최신)
+- ✅ **Gemini 이미지 생성 완료**: Nano Banana (`gemini-2.5-flash-image`) 구현, Pillow 10.4.0 추가
+- ✅ **Nginx 설정 개선**: resolver + 변수 패턴으로 upstream DNS 조회 시점 문제 해결
+- ✅ **마이그레이션 안정화**: entrypoint.sh에 `--fake-initial` 옵션 추가
+- ✅ **프로젝트 정리**: 불필요한 문서 삭제 (PR_DESCRIPTION.md, MERGE_CHECKLIST.md, DOCKER_VOLUME_FIX.md), infra/ 폴더 제거
+- ✅ **문서 최신화**: README.md, PROJECT_DOCUMENTATION.md 진행상황 업데이트
+
+### 2026-01-24 (이전)
 - ✅ **사용자·멤버십 DB**: 커스텀 User (`users.User`), `membership_type`(free/standard/premium), `membership_expires_at`, `has_openai_key`/`has_gemini_key`, `photo_url`, `last_login_at`
 - ✅ **채팅·폴더 DB 저장**: `chats` 앱 (Folder, ChatSession), 사용자별 CRUD API, 프론트 chatApi 연동
 - ✅ **Jobs 사용자 연결·비동기**: Job `user` FK, `GET/POST /jobs/`, `GET /jobs/<id>/`, Celery `run_ai_job`, 사용자당 최대 4건 동시, 429 초과 시
@@ -1154,4 +1169,4 @@ cat infra/nginx/conf.d/weavai.conf | grep proxy_intercept_errors
 ---
 
 **마지막 업데이트**: 2026-01-24  
-**문서 버전**: 2.4 (사용자·멤버십·채팅·Jobs DB·비동기·UX 최신화 반영)
+**문서 버전**: 2.5 (Gemini 이미지 생성, Nginx 개선, 프로젝트 정리 반영)
