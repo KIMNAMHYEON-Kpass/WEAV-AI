@@ -39,12 +39,21 @@ class GeminiClient:
             # 시스템 프롬프트 처리 (Gemini에서는 system_instruction으로 설정)
             system_instruction = request.system_prompt if request.system_prompt else None
 
+            # 모델 선택 (model_id가 있으면 사용, 없으면 기본값)
+            model_name = request.model_id if hasattr(request, 'model_id') and request.model_id else self.default_text_model
+            # 모델 ID 매핑 (프론트 모델 ID → Gemini API 모델명)
+            model_mapping = {
+                'gemini-3-flash': 'gemini-1.5-flash',
+                'gemini-3-pro-preview': 'gemini-1.5-pro',
+            }
+            if model_name in model_mapping:
+                model_name = model_mapping[model_name]
+            
             # API 호출
             response = self.client.models.generate_content(
-                model=self.default_text_model,
+                model=model_name,
                 contents=request.input_text,
                 config=config,
-                # Gemini에서는 system_instruction을 별도로 설정할 수 있음
             )
 
             # 응답 데이터 표준화

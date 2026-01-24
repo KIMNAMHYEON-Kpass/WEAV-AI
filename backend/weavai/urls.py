@@ -14,6 +14,7 @@ urlpatterns = [
     path('api/v1/', include([
         path('', include('weavai.apps.core.urls')),
         path('auth/', include('users.urls')),  # 사용자 인증 API
+        path('chat/', include('weavai.apps.ai.urls')),  # AI 채팅 Gateway
         path('jobs/', include('jobs.urls')),
         path('chats/', include('chats.urls')),
         path('storage/', include('weavai.apps.storage.urls')),
