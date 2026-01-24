@@ -2,6 +2,9 @@ import { GoogleGenAI } from "@google/genai";
 import { AIModel, Message } from "../types";
 import { VideoOptions } from "../components/chat/VideoOptions";
 
+// 백엔드 API 클라이언트 사용
+import { apiClient } from './apiClient';
+
 // --- Configuration & Helpers ---
 const requireEnv = (key: string, name: string): string => {
   // Vite uses import.meta.env
@@ -270,14 +273,33 @@ export const aiService = {
    * Generate Video (Routes to Sora 2)
    */
   generateVideo: async (model: AIModel, prompt: string, videoOptions: VideoOptions, user: any, signal?: AbortSignal): Promise<string | null> => {
-    checkAccess(model.id, user);
+    try {
+      // 백엔드 Jobs API 호출
+      const jobData = {
+        provider: model.provider || 'openai',
+        model_id: model.id,
+        arguments: {
+          prompt,
+          duration: videoOptions.duration,
+          resolution: videoOptions.resolution,
+          aspect_ratio: videoOptions.aspectRatio,
+          style: videoOptions.style
+        },
+        store_result: true
+      };
 
-    // Route to OpenAI (SORA 2)
-    if (model.id === 'sora') {
-      return await aiService.generateSora2Video(prompt, videoOptions, signal);
+      const result = await apiClient.post('/api/v1/jobs/', jobData);
+
+      if (result.result && result.result.type === 'video' && result.result.url) {
+        return result.result.url;
+      } else {
+        throw new Error('비디오 생성 결과를 받지 못했습니다.');
+      }
+
+    } catch (error) {
+      console.error('Video generation error:', error);
+      throw error;
     }
-
-    return null;
   },
 
   // --- Helper Functions ---
@@ -386,29 +408,27 @@ export const aiService = {
    * Generate Image (Routes to Google or OpenAI)
    */
   generateImage: async (model: AIModel, prompt: string, user: any, signal?: AbortSignal): Promise<string | null> => {
-    checkAccess(model.id, user);
-
     try {
-      if (model.id === 'gpt-image-1.5' || model.category === 'GPT') {
-        return await generateOpenAIImage(model.apiModelName, prompt, signal);
+      // 백엔드 Jobs API 호출
+      const jobData = {
+        provider: model.provider || 'openai',
+        model_id: model.id,
+        arguments: {
+          prompt
+        },
+        store_result: true
+      };
+
+      const result = await apiClient.post('/api/v1/jobs/', jobData);
+
+      if (result.result && result.result.type === 'image' && result.result.url) {
+        return result.result.url;
+      } else {
+        throw new Error('이미지 생성 결과를 받지 못했습니다.');
       }
 
-      const ai = getGoogleClient();
-      const response = await ai.models.generateContent({
-        model: model.apiModelName,
-        contents: { parts: [{ text: prompt }] }
-      });
-
-      if (response.candidates?.[0]?.content?.parts) {
-        for (const part of response.candidates[0].content.parts) {
-          if (part.inlineData) {
-            return `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`;
-          }
-        }
-      }
-      return null;
     } catch (error) {
-      console.error("Image Generation Error:", error);
+      console.error('Image generation error:', error);
       throw error;
     }
   },
@@ -423,6 +443,10 @@ export const aiService = {
       yield `\n[오류: ${e.message}]`;
       return;
     }
+
+    // 백엔드 API를 통한 스트리밍은 아직 미구현이므로, 
+    // 임시로 기존 직접 호출 방식 유지 (추후 백엔드 스트리밍 지원 시 변경)
+    // TODO: 백엔드에서 Server-Sent Events (SSE) 또는 WebSocket 지원 시 변경
 
     if (model.category === 'GPT') {
       yield* streamOpenAI(model.apiModelName, prompt, history, systemInstruction, signal);

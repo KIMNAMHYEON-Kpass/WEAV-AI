@@ -181,40 +181,46 @@ const FolderContext = createContext<FolderContextType | null>(null);
 
 export const FolderProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const { user } = useAuth(); // Auth Integration
+    // 사용자별로 데이터 분리
     const [folders, setFolders] = useState<Folder[]>(() => {
-        const saved = localStorage.getItem('weav_folders');
+        if (!user) return [];
+        const saved = localStorage.getItem(`weav_folders_${user.uid}`);
         return saved ? JSON.parse(saved) : [];
     });
 
     const [folderChats, setFolderChats] = useState<Record<string, ChatSession[]>>(() => {
-        const saved = localStorage.getItem('weav_folder_chats');
+        if (!user) return {};
+        const saved = localStorage.getItem(`weav_folder_chats_${user.uid}`);
         return saved ? JSON.parse(saved) : {};
     });
 
     const [isGeneratingFolder, setIsGeneratingFolder] = useState(false);
 
-    // Persistence with error handling
+    // Persistence with error handling (사용자별로 분리)
     useEffect(() => {
+        if (!user) return;
         try {
-            localStorage.setItem('weav_folders', JSON.stringify(folders));
+            localStorage.setItem(`weav_folders_${user.uid}`, JSON.stringify(folders));
         } catch (error) {
             console.warn('Failed to save folders to localStorage:', error);
         }
-    }, [folders]);
+    }, [folders, user]);
 
     useEffect(() => {
+        if (!user) return;
         try {
             // 데이터 크기 확인 및 정리
             const dataToSave = cleanupOldChatData(folderChats);
             const dataString = JSON.stringify(dataToSave);
+            const storageKey = `weav_folder_chats_${user.uid}`;
 
             // 데이터가 너무 크면 압축 시도 또는 경고
             if (dataString.length > 2 * 1024 * 1024) { // 2MB 초과
                 console.warn('Chat data is too large, cleaning up old data...');
                 const cleanedData = aggressiveCleanup(folderChats);
-                localStorage.setItem('weav_folder_chats', JSON.stringify(cleanedData));
+                localStorage.setItem(storageKey, JSON.stringify(cleanedData));
             } else {
-                localStorage.setItem('weav_folder_chats', dataString);
+                localStorage.setItem(storageKey, dataString);
             }
         } catch (error) {
             console.error('Failed to save folder chats to localStorage:', error);
@@ -223,11 +229,14 @@ export const FolderProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                 try {
                     console.warn('Storage quota exceeded, cleaning up old data...');
                     const cleanedData = aggressiveCleanup(folderChats);
-                    localStorage.setItem('weav_folder_chats', JSON.stringify(cleanedData));
+                    const storageKey = `weav_folder_chats_${user.uid}`;
+                    localStorage.setItem(storageKey, JSON.stringify(cleanedData));
                 } catch (retryError) {
                     console.error('Failed to save even after cleanup:', retryError);
                     // 최후의 수단: 데이터를 초기화
-                    localStorage.removeItem('weav_folder_chats');
+                    if (user) {
+                        localStorage.removeItem(`weav_folder_chats_${user.uid}`);
+                    }
                     alert('브라우저 저장 공간이 부족합니다. 일부 채팅 기록이 삭제되었습니다.');
                 }
             }

@@ -12,10 +12,10 @@ urlpatterns = [
 
     # API v1 라우팅
     path('api/v1/', include([
-        path('', include('apps.core.urls')),
-        path('auth/', include('users.urls')),
-        path('jobs/', include('apps.jobs.urls')),
-        path('storage/', include('apps.storage.urls')),
+        path('', include('weavai.apps.core.urls')),
+        path('auth/', include('users.urls')),  # 사용자 인증 API
+        path('jobs/', include('jobs.urls')),
+        path('storage/', include('weavai.apps.storage.urls')),
     ])),
 
     # 향후 확장 가능

@@ -54,7 +54,7 @@ TIMEOUT=${GUNICORN_TIMEOUT:-300}
 echo "   워커: $WORKERS, 스레드: $THREADS"
 echo "   바인드: $BIND, 타임아웃: ${TIMEOUT}초"
 
-# Gunicorn 실행
+# Gunicorn 실행 (디버그: 상세 로그 출력)
 exec gunicorn \
     --workers $WORKERS \
     --threads $THREADS \
@@ -62,6 +62,7 @@ exec gunicorn \
     --timeout $TIMEOUT \
     --access-logfile - \
     --error-logfile - \
-    --log-level info \
+    --log-level debug \
+    --capture-output \
     --reload \
     weavai.wsgi:application

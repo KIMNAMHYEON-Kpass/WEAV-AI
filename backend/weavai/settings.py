@@ -5,6 +5,11 @@ Replace this with actual settings after setup.
 
 from pathlib import Path
 from decouple import config, Csv
+import os
+
+# Load .env file explicitly
+from dotenv import load_dotenv
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -14,6 +19,7 @@ SECRET_KEY = config('SECRET_KEY', default='your-secret-key-change-this')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', default=True, cast=bool)
+# DEBUG_PROPAGATE_EXCEPTIONS = True  # 디버그 완료 후 제거
 
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1,testserver', cast=Csv())
 
@@ -35,12 +41,10 @@ INSTALLED_APPS = [
     'storages',
 
     # Local apps
-    'users',
+    'users',  # 사용자 인증
     'ai_services',
     'payments',
-    'apps.core',
-    'apps.jobs',
-    'apps.storage',
+    'jobs',  # AI 작업 관리 (모델 포함)
 ]
 
 MIDDLEWARE = [
@@ -145,7 +149,8 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.SessionAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated',
+        # 'rest_framework.permissions.IsAuthenticated',  # 임시 비활성화
+        'rest_framework.permissions.AllowAny',  # 테스트용
     ],
     'DEFAULT_RENDERER_CLASSES': [
         'rest_framework.renderers.JSONRenderer',
@@ -195,3 +200,31 @@ GEMINI_API_KEY = config('GEMINI_API_KEY', default='')
 STRIPE_PUBLIC_KEY = config('STRIPE_PUBLIC_KEY', default='')
 STRIPE_SECRET_KEY = config('STRIPE_SECRET_KEY', default='')
 STRIPE_WEBHOOK_SECRET = config('STRIPE_WEBHOOK_SECRET', default='')
+
+# 디버그: 상세한 로깅 설정 (디버그 중에만 활성화)
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "verbose": {
+            "format": "%(levelname)s %(asctime)s %(name)s %(message)s"
+        }
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "verbose",
+        }
+    },
+    "loggers": {
+        "django": {
+            "handlers": ["console"],
+            "level": "INFO",
+        },
+        "django.request": {
+            "handlers": ["console"],
+            "level": "ERROR",
+            "propagate": True
+        }
+    }
+}

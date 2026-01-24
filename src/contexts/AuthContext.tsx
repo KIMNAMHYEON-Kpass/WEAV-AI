@@ -3,44 +3,6 @@ import { User, onAuthStateChanged } from 'firebase/auth';
 import { auth, loginWithGoogle, logout } from '../services/firebase';
 import { userService } from '../services/userService';
 
-// 개발 환경용 모의 사용자
-const mockUser: User = {
-  uid: 'dev-user-123',
-  email: 'developer@weav-ai.dev',
-  displayName: '개발자',
-  photoURL: null,
-  emailVerified: true,
-  isAnonymous: false,
-  metadata: {
-    creationTime: new Date().toISOString(),
-    lastSignInTime: new Date().toISOString(),
-  },
-  providerData: [{
-    uid: 'dev-user-123',
-    email: 'developer@weav-ai.dev',
-    displayName: '개발자',
-    photoURL: null,
-    providerId: 'google.com',
-  }],
-  refreshToken: 'mock-refresh-token',
-  tenantId: null,
-  delete: async () => {},
-  getIdToken: async () => 'mock-id-token',
-  getIdTokenResult: async () => ({
-    token: 'mock-id-token',
-    expirationTime: new Date(Date.now() + 3600000).toISOString(),
-    authTime: new Date().toISOString(),
-    issuedAtTime: new Date().toISOString(),
-    signInProvider: 'google.com',
-    signInSecondFactor: null,
-    claims: {},
-  }),
-  reload: async () => {},
-  toJSON: () => ({}),
-  phoneNumber: null,
-  providerId: 'firebase',
-};
-
 interface AuthContextType {
   user: User | null;
   loading: boolean;
@@ -55,14 +17,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (import.meta.env.DEV) {
-      // 개발 환경: 로그인 없이 바로 사용 가능하도록 null 유지
-      setUser(null);
-      setLoading(false);
-      return;
-    }
-
-    // 프로덕션 환경에서는 Firebase 인증 상태 확인
+    // Firebase 인증 상태 확인 (개발/프로덕션 모두)
     if (!auth) {
       console.warn("AuthContext: Firebase auth not initialized");
       setLoading(false);
@@ -73,10 +28,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(currentUser);
       if (currentUser) {
         try {
+          // Firestore 동기화
           await userService.syncUserToFirestore(currentUser);
+          // 백엔드 JWT 토큰 발급
+          await userService.verifyFirebaseToken(currentUser);
         } catch (error) {
-          console.error("Failed to sync user to Firestore:", error);
+          console.error("Failed to sync user or verify token:", error);
         }
+      } else {
+        // 로그아웃 시 토큰 정리
+        userService.clearAuth();
       }
       setLoading(false);
     });
@@ -84,31 +45,45 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const signIn = async () => {
-    // 개발 환경에서는 모의 로그인, 프로덕션에서는 실제 Firebase 로그인
-    if (import.meta.env.DEV) {
-      // 개발 환경: 모의 사용자 로그인
-      console.log("🔧 개발 환경: 모의 로그인 실행");
-      setUser(mockUser);
-      setLoading(false);
-    } else {
-      // 프로덕션 환경: 실제 Firebase 로그인
-      try {
-        await loginWithGoogle();
-      } catch (error) {
-        console.error("Login failed", error);
+    // 실제 Firebase Google 로그인 사용 (개발/프로덕션 모두)
+    if (!auth) {
+      console.error("Firebase auth not initialized. Please check your Firebase configuration.");
+      return;
+    }
+
+    try {
+      const firebaseUser = await loginWithGoogle();
+      if (firebaseUser) {
+        // Firestore 동기화 및 백엔드 JWT 토큰 발급
+        await userService.syncUserToFirestore(firebaseUser);
+        await userService.verifyFirebaseToken(firebaseUser);
       }
+    } catch (error) {
+      console.error("Login failed", error);
+      throw error; // 에러를 상위로 전파하여 UI에서 처리할 수 있도록
     }
   };
 
   const signOut = async () => {
-    if (import.meta.env.DEV) {
-      // 개발 환경: 모의 로그아웃
-      console.log("🔧 개발 환경: 모의 로그아웃 실행");
+    // 실제 Firebase 로그아웃 사용 (개발/프로덕션 모두)
+    if (!auth) {
+      console.warn("Firebase auth not initialized");
       setUser(null);
-    } else {
-      // 프로덕션 환경: 실제 Firebase 로그아웃
+      return;
+    }
+
+    try {
+      // 로그아웃 전에 현재 사용자 데이터 정리 (선택사항)
+      const currentUser = user;
+      
       await logout();
       setUser(null);
+      
+      // 로그아웃 후 채팅 상태 초기화는 ChatContext에서 처리
+      // 여기서는 사용자 상태만 관리
+    } catch (error) {
+      console.error("Logout failed", error);
+      throw error;
     }
   };
 

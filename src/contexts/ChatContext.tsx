@@ -46,11 +46,34 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const { user } = useAuth();
     const { addChatToFolder, updateFolderChat, folderChats, removeChatFromFolder } = useFolder();
 
-    // Persisted Recent Chats
-    const [recentChats, setRecentChats] = useState<ChatSession[]>(() => {
-        const saved = localStorage.getItem('weav_recent_chats');
-        return saved ? JSON.parse(saved) : [];
-    });
+    // Persisted Recent Chats (사용자별로 분리)
+    const [recentChats, setRecentChats] = useState<ChatSession[]>([]);
+
+    // 사용자 변경 시 채팅 데이터 초기화 및 로드
+    useEffect(() => {
+        if (!user) {
+            // 로그아웃 시 데이터 초기화
+            setMessages([]);
+            setRecentChats([]);
+            setCurrentSessionId(null);
+            setActiveFolderId(null);
+            setHasStarted(false);
+            return;
+        }
+
+        // 새 사용자 로그인 시 해당 사용자의 데이터 로드
+        const saved = localStorage.getItem(`weav_recent_chats_${user.uid}`);
+        if (saved) {
+            try {
+                setRecentChats(JSON.parse(saved));
+            } catch (error) {
+                console.error('Failed to load recent chats:', error);
+                setRecentChats([]);
+            }
+        } else {
+            setRecentChats([]);
+        }
+    }, [user?.uid]); // user.uid가 변경될 때만 실행
 
     // Current Chat UI State
     const [messages, setMessages] = useState<Message[]>([]);
@@ -72,10 +95,15 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const abortControllerRef = useRef<AbortController | null>(null);
 
-    // Persistence for Recent Chats
+    // Persistence for Recent Chats (사용자별로 분리)
     useEffect(() => {
-        localStorage.setItem('weav_recent_chats', JSON.stringify(recentChats));
-    }, [recentChats]);
+        if (!user) return;
+        try {
+            localStorage.setItem(`weav_recent_chats_${user.uid}`, JSON.stringify(recentChats));
+        } catch (error) {
+            console.error('Failed to save recent chats to localStorage:', error);
+        }
+    }, [recentChats, user]);
 
     // Sync Current Messages to Session Storage (Folder or Recent)
     useEffect(() => {
@@ -96,7 +124,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 c.id === currentSessionId ? { ...c, ...sessionUpdate } : c
             ));
         }
-    }, [messages, currentSessionId, activeFolderId, selectedModel, systemInstruction]);
+    }, [messages, currentSessionId, activeFolderId, selectedModel, systemInstruction, updateFolderChat, user]);
 
     const stopGeneration = () => {
         if (abortControllerRef.current) {

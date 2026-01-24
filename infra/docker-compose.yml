@@ -128,6 +128,16 @@ services:
       MINIO_BUCKET: ${MINIO_BUCKET:-weavai-files}
       # AI 서비스
       FAL_KEY: ${FAL_KEY}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      OPENAI_TEXT_MODEL: ${OPENAI_TEXT_MODEL:-gpt-4o-mini}
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+      GEMINI_TEXT_MODEL: ${GEMINI_TEXT_MODEL:-gemini-1.5-flash}
+      AI_PROVIDER_DEFAULT: ${AI_PROVIDER_DEFAULT:-openai}
+      MAX_TEXT_CHARS: ${MAX_TEXT_CHARS:-8000}
+      MAX_OUTPUT_TOKENS: ${MAX_OUTPUT_TOKENS:-1024}
+    # 디버그: Django 직접 접근을 위한 임시 호스트 포트 바인딩 (프로덕션에서는 제거)
+    ports:
+      - "127.0.0.1:8000:8000"
     # 호스트 포트 노출하지 않음 (Nginx를 통해서만 접근)
     expose:
       - "8000"
@@ -175,6 +185,13 @@ services:
       MINIO_BUCKET: ${MINIO_BUCKET:-weavai-files}
       # AI 서비스
       FAL_KEY: ${FAL_KEY}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      OPENAI_TEXT_MODEL: ${OPENAI_TEXT_MODEL:-gpt-4o-mini}
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+      GEMINI_TEXT_MODEL: ${GEMINI_TEXT_MODEL:-gemini-1.5-flash}
+      AI_PROVIDER_DEFAULT: ${AI_PROVIDER_DEFAULT:-openai}
+      MAX_TEXT_CHARS: ${MAX_TEXT_CHARS:-8000}
+      MAX_OUTPUT_TOKENS: ${MAX_OUTPUT_TOKENS:-1024}
     command: celery -A weavai worker -l INFO --concurrency=2
     # 워커는 포트 노출하지 않음
 

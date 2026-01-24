@@ -22,7 +22,7 @@ app.autodiscover_tasks()
 app.conf.beat_schedule = {
     # 매일 자정에 완료된 오래된 작업 정리
     'cleanup-old-jobs': {
-        'task': 'apps.jobs.tasks.cleanup_old_jobs',
+        'task': 'jobs.tasks.cleanup_old_jobs',
         'schedule': crontab(hour=0, minute=0),  # 매일 00:00
     },
 }
@@ -31,12 +31,12 @@ app.conf.beat_schedule = {
 # 특정 작업을 특정 큐로 라우팅
 app.conf.task_routes = {
     # FAL.ai 관련 작업들 - 추후 확장 예정
-    # 'apps.jobs.tasks.submit_fal_job': {'queue': 'fal_jobs'},
-    # 'apps.jobs.tasks.poll_fal_job': {'queue': 'fal_jobs'},
-    # 'apps.jobs.tasks.finalize_job': {'queue': 'fal_jobs'},
+    # 'jobs.tasks.submit_fal_job': {'queue': 'fal_jobs'},
+    # 'jobs.tasks.poll_fal_job': {'queue': 'fal_jobs'},
+    # 'jobs.tasks.finalize_job': {'queue': 'fal_jobs'},
 
     # 유지보수 작업
-    'apps.jobs.tasks.cleanup_old_jobs': {'queue': 'maintenance'},
+    'jobs.tasks.cleanup_old_jobs': {'queue': 'maintenance'},
 }
 
 # ===== 작업 설정 =====

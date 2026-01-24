@@ -46,6 +46,8 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 lerna-debug.log*
+build.log
+infra/build.log
 
 # Runtime data
 pids/
@@ -146,3 +148,10 @@ public
 # Temporary folders
 tmp/
 temp/
+
+# Temporary/Development files
+00_for_gpt.txt
+*.tmp
+*.bak
+*.swp
+*~

@@ -2,7 +2,6 @@
 # AI 작업 관리 (FAL.ai 제외 - 추후 확장 예정)
 
 from django.db import models
-from django.core.validators import MinValueValidator, MaxValueValidator
 import uuid
 
 
@@ -23,9 +22,9 @@ class Job(models.Model):
         ('FAILED', '실패함'),             # 작업 실패
     ]
 
-    # 제공자 정의 (확장 가능) - FAL.ai 제외
+    # 제공자 정의 (확장 가능)
     PROVIDER_CHOICES = [
-        # ('fal', 'FAL.ai'),  # 추후 확장 예정
+        ('fal', 'FAL.ai'),  # 추후 확장 예정
         ('openai', 'OpenAI'),
         ('gemini', 'Google Gemini'),
         # 향후 확장: ('replicate', 'Replicate')
@@ -103,7 +102,15 @@ class Job(models.Model):
         help_text='작업 실패 시 오류 메시지'
     )
 
+    # AI 결과 저장 (JSON)
+    result_json = models.JSONField(
+        blank=True,
+        null=True,
+        help_text='AI API 결과 데이터 (텍스트, usage 등)'
+    )
+
     class Meta:
+        app_label = 'jobs'
         ordering = ['-created_at']
         indexes = [
             models.Index(fields=['status', 'created_at']),
@@ -140,6 +147,7 @@ class Artifact(models.Model):
 
     # 파일 종류
     KIND_CHOICES = [
+        ('text', '텍스트'),
         ('image', '이미지'),
         ('video', '비디오'),
         ('file', '기타 파일'),
@@ -164,15 +172,21 @@ class Artifact(models.Model):
     )
     s3_key = models.CharField(
         max_length=500,
+        blank=True,
+        null=True,
         help_text='MinIO/S3 객체 키'
     )
 
     # 메타데이터
     mime_type = models.CharField(
         max_length=100,
+        blank=True,
+        null=True,
         help_text='MIME 타입 (예: image/png)'
     )
     size_bytes = models.PositiveBigIntegerField(
+        blank=True,
+        null=True,
         help_text='파일 크기 (바이트)'
     )
 
@@ -182,6 +196,13 @@ class Artifact(models.Model):
         null=True,
         help_text='임시 접근 URL (만료됨)'
     )
+
+    # 텍스트 콘텐츠 (텍스트 결과용)
+    text_content = models.TextField(
+        blank=True,
+        null=True,
+        help_text='텍스트 결과 콘텐츠'
+    )
     presigned_url_expires_at = models.DateTimeField(
         blank=True,
         null=True,
@@ -189,6 +210,7 @@ class Artifact(models.Model):
     )
 
     class Meta:
+        app_label = 'jobs'
         ordering = ['-created_at']
         indexes = [
             models.Index(fields=['job', 'kind']),
