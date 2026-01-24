@@ -46,13 +46,22 @@ class OpenAIClient:
                 "content": request.input_text
             })
 
+            # 모델 선택 (model_id가 있으면 사용, 없으면 기본값)
+            model_name = request.model_id if hasattr(request, 'model_id') and request.model_id else self.default_text_model
+            # 모델 ID 매핑 (프론트 모델 ID → OpenAI API 모델명)
+            model_mapping = {
+                'gpt-5.2-instant': 'gpt-4o-mini',  # 임시 매핑
+                'gpt-5-mini': 'gpt-4o-mini',
+            }
+            if model_name in model_mapping:
+                model_name = model_mapping[model_name]
+            
             # API 호출
             response = self.client.chat.completions.create(
-                model=self.default_text_model,
+                model=model_name,
                 messages=messages,
                 temperature=request.temperature,
                 max_tokens=request.max_output_tokens,
-                # Responses API에서는 response_format을 사용할 수 있음
             )
 
             # 응답 데이터 표준화

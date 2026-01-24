@@ -17,6 +17,7 @@ class TextGenerationRequest(BaseModel):
         ge=1,
         le=int(os.getenv('MAX_OUTPUT_TOKENS', '4096'))
     )
+    model_id: Optional[str] = Field(None, max_length=100)  # 모델 ID (선택)
 
     @field_validator('input_text')
     @classmethod
