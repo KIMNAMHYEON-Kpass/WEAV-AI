@@ -3,6 +3,7 @@ import { ChevronDown, Box, Lock } from 'lucide-react';
 import { AIModel, ModelCategory } from '../../types';
 import { MODELS } from '../../constants/models';
 import { useAuth } from '../../contexts/AuthContext';
+import { FEATURE_FLAGS } from '../../constants/featureFlags';
 
 interface ModelSelectorProps {
   selectedModel: AIModel;
@@ -75,6 +76,7 @@ const ModelSelectorComponent: React.FC<ModelSelectorProps> = ({ selectedModel, o
       // 비로그인: gpt-5.2-instant만 가능
       return modelId !== 'gpt-5.2-instant';
     }
+    if (FEATURE_FLAGS.bypassMembership) return false;
     if (!userInfo) return true; // 로그인했지만 정보 없으면 잠금
     // 무료 모델은 항상 사용 가능
     if (modelId === 'gpt-5.2-instant') return false;

@@ -6,6 +6,7 @@ import { VideoCreationStudio } from './VideoCreationStudio';
 import { MembershipModal } from '@/components/membership/MembershipModal';
 import { useAuth } from '@/contexts/AuthContext';
 import { MODELS } from '@/constants/models';
+import { FEATURE_FLAGS } from '@/constants/featureFlags';
 import { AIModel, PromptTemplate } from '@/types';
 
 interface ChatInputProps {
@@ -57,6 +58,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
             // 비로그인: gpt-5.2-instant만 가능
             return model.id === 'gpt-5.2-instant';
         }
+        if (FEATURE_FLAGS.bypassMembership) return true;
         if (!userInfo) return false;
         // 로그인: 멤버십 확인
         if (model.id === 'gpt-5.2-instant') return true; // 무료 모델
@@ -67,7 +69,9 @@ export const ChatInput: React.FC<ChatInputProps> = ({
         if (!canUseModel(selectedModel)) {
             const modelName = selectedModel.name;
             setRequiredFeature(`${modelName} 사용`);
-            setShowMembershipModal(true);
+            if (!FEATURE_FLAGS.hideBillingUI) {
+                setShowMembershipModal(true);
+            }
             return;
         }
         onSend();
@@ -119,7 +123,9 @@ export const ChatInput: React.FC<ChatInputProps> = ({
     const handleModelSelect = (model: AIModel) => {
         if (!canUseModel(model)) {
             setRequiredFeature(`${model.name} 사용`);
-            setShowMembershipModal(true);
+            if (!FEATURE_FLAGS.hideBillingUI) {
+                setShowMembershipModal(true);
+            }
             return;
         }
         if (hasStarted && model.id !== selectedModel.id) {
@@ -387,11 +393,13 @@ ${hasStarted ? 'h-32 opacity-100' : 'h-0 opacity-0'}`}
                 </div>
             </div>
 
-            <MembershipModal
-                isOpen={showMembershipModal}
-                onClose={() => setShowMembershipModal(false)}
-                requiredFeature={requiredFeature}
-            />
+            {!FEATURE_FLAGS.hideBillingUI && (
+                <MembershipModal
+                    isOpen={showMembershipModal}
+                    onClose={() => setShowMembershipModal(false)}
+                    requiredFeature={requiredFeature}
+                />
+            )}
         </div>
     );
 };

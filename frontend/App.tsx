@@ -17,6 +17,7 @@ import { LoginView } from '@/components/auth/LoginView';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { PricingPage } from '@/components/billing/PricingPage';
 import { BillingSuccessPage } from '@/components/billing/BillingSuccessPage';
+import { FEATURE_FLAGS } from '@/constants/featureFlags';
 
 import { DEFAULT_PROMPTS } from '@/constants/prompts';
 import { useAppLogic } from '@/hooks/useAppLogic';
@@ -96,8 +97,12 @@ const MainLayout: React.FC = () => {
         >
           <Routes>
             <Route path="/login" element={<LoginView />} />
-            <Route path="/pricing" element={<PricingPage />} />
-            <Route path="/billing/success" element={<BillingSuccessPage />} />
+            {!FEATURE_FLAGS.hideBillingUI && (
+              <Route path="/pricing" element={<PricingPage />} />
+            )}
+            {!FEATURE_FLAGS.hideBillingUI && (
+              <Route path="/billing/success" element={<BillingSuccessPage />} />
+            )}
             <Route path="/" element={
               <ChatView hasStarted={hasStarted} contentStyle={contentStyle} allPrompts={allPrompts} />
             } />
