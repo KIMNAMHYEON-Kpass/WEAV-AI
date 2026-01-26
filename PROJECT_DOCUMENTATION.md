@@ -249,29 +249,36 @@ WEAV-AI/
 │   ├── Dockerfile             # 백엔드 이미지
 │   └── entrypoint.sh          # 컨테이너 시작 스크립트
 │
-├── src/                        # React 프론트엔드
-│   ├── components/            # React 컴포넌트
-│   │   ├── auth/              # 인증 (LoginView, ProtectedRoute)
-│   │   ├── chat/              # 채팅 UI
-│   │   ├── gallery/           # 미디어 갤러리
-│   │   ├── layout/            # 레이아웃
-│   │   ├── membership/        # 멤버십 유도 모달
-│   │   ├── settings/          # 설정 모달
-│   │   └── ui/                # UI 컴포넌트
-│   ├── contexts/              # React Context
-│   │   ├── AuthContext.tsx    # 인증·userInfo(멤버십)
-│   │   ├── ChatContext.tsx    # 채팅 (chatApi 연동)
-│   │   ├── FolderContext.tsx  # 폴더 (chatApi 연동)
-│   │   └── ThemeContext.tsx   # 테마
-│   ├── services/              # API 서비스
-│   │   ├── aiService.ts       # AI (Jobs 비동기+폴링)
-│   │   ├── apiClient.ts       # JWT·API 공통
-│   │   ├── chatApi.ts         # 채팅·폴더 API
-│   │   ├── userService.ts     # 사용자·JWT
-│   │   └── firebase.ts        # Firebase 인증
-│   ├── hooks/                 # 커스텀 훅
-│   ├── constants/             # 상수 정의
-│   └── types.ts               # TypeScript 타입
+├── frontend/                   # React 프론트엔드 (Vite)
+│   ├── src/                    # React 소스
+│   │   ├── components/         # React 컴포넌트
+│   │   │   ├── auth/           # 인증 (LoginView, ProtectedRoute)
+│   │   │   ├── chat/           # 채팅 UI
+│   │   │   ├── gallery/        # 미디어 갤러리
+│   │   │   ├── layout/         # 레이아웃
+│   │   │   ├── membership/     # 멤버십 유도 모달
+│   │   │   ├── settings/       # 설정 모달
+│   │   │   └── ui/             # UI 컴포넌트
+│   │   ├── contexts/           # React Context
+│   │   │   ├── AuthContext.tsx # 인증·userInfo(멤버십)
+│   │   │   ├── ChatContext.tsx # 채팅 (chatApi 연동)
+│   │   │   ├── FolderContext.tsx # 폴더 (chatApi 연동)
+│   │   │   └── ThemeContext.tsx # 테마
+│   │   ├── services/           # API 서비스
+│   │   │   ├── aiService.ts    # AI (Jobs 비동기+폴링)
+│   │   │   ├── apiClient.ts    # JWT·API 공통
+│   │   │   ├── chatApi.ts      # 채팅·폴더 API
+│   │   │   ├── userService.ts  # 사용자·JWT
+│   │   │   └── firebase.ts     # Firebase 인증
+│   │   ├── hooks/              # 커스텀 훅
+│   │   ├── constants/          # 상수 정의
+│   │   └── types.ts            # TypeScript 타입
+│   ├── index.html              # Vite 엔트리 HTML
+│   ├── index.tsx               # Vite 엔트리 TSX
+│   ├── App.tsx                 # 앱 루트 컴포넌트
+│   ├── package.json            # 프론트엔드 의존성
+│   ├── vite.config.ts          # Vite 설정
+│   └── dist/                   # 프론트 빌드 결과물
 │
 ├── infra_WEAV/                 # 인프라 설정
 │   ├── docker-compose.yml     # Docker Compose 설정
@@ -280,9 +287,6 @@ WEAV-AI/
 │   │       └── weavai.conf
 │   └── scripts/                # 초기화 스크립트
 │
-├── dist/                       # 빌드 결과물
-├── package.json                # 프론트엔드 의존성
-├── vite.config.ts              # Vite 설정
 └── README.md                   # 프로젝트 README
 ```
 
@@ -402,10 +406,12 @@ docker compose run --rm --entrypoint "" api python manage.py migrate
 
 ```bash
 # 개발 모드
+cd frontend
 npm install
 npm run dev
 
 # 프로덕션 빌드
+cd frontend
 npm run build
 ```
 

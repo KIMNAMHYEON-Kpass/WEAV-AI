@@ -1,7 +1,7 @@
 import { getFirestore, doc, getDoc, setDoc, serverTimestamp, updateDoc } from 'firebase/firestore';
 import { User } from 'firebase/auth';
 import { app } from './firebase';
-import { apiClient, tokenManager } from './apiClient';
+import { apiClient, tokenManager, API_BASE_URL } from './apiClient';
 import { toast } from 'sonner';
 
 const db = getFirestore(app);
@@ -18,7 +18,7 @@ export const userService = {
             const idToken = await user.getIdToken();
             
             // 백엔드에 토큰 검증 요청 (인증 없이 호출)
-            const response = await fetch(`${import.meta.env.DEV ? 'http://localhost:8080' : (import.meta.env.VITE_API_BASE_URL || 'https://weavai.hub')}/api/v1/auth/verify-firebase-token/`, {
+            const response = await fetch(`${API_BASE_URL}/api/v1/auth/verify-firebase-token/`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

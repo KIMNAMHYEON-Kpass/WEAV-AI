@@ -133,9 +133,12 @@ docker compose run --rm --entrypoint "" api python manage.py migrate
 ### 4. 프론트엔드 실행
 
 ```bash
+cd frontend
 npm install
 npm run dev
 ```
+
+> 배포 환경에서는 `frontend/.env`의 `VITE_API_BASE_URL`을 실제 API 도메인으로 설정하세요.
 
 ### 5. 접속
 

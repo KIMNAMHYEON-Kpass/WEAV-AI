@@ -130,10 +130,11 @@ sudo launchctl load /Library/LaunchDaemons/com.cloudflare.cloudflared.plist
 ### 프론트엔드 빌드
 
 ```bash
+cd frontend
 npm run build
 ```
 
-빌드된 파일은 `dist/` 디렉토리에 생성됩니다.
+빌드된 파일은 `frontend/dist/` 디렉토리에 생성됩니다.
 
 ### Nginx 설정 업데이트
 
@@ -167,6 +168,42 @@ server {
         add_header Content-Type text/plain;
     }
 }
+```
+> Nginx 컨테이너에 `frontend/dist` 내용을 `/usr/share/nginx/html`로 복사하거나 마운트해야 합니다.
+
+---
+
+## 7-A단계: Cloudflare Pages + 로컬 백엔드(터널) 구성
+
+> 프론트는 Pages, 백엔드는 로컬(Django/Postgres/MinIO)을 유지하고 Cloudflare Tunnel로 외부 접근을 붙입니다.
+
+### 1) 프론트 환경 변수
+`frontend/.env`에 API 도메인을 설정:
+```bash
+VITE_API_BASE_URL=https://api.your-domain.com
+```
+
+### 2) 백엔드 환경 변수
+`backend/.env` 또는 `infra_WEAV/.env`에 도메인 추가:
+```bash
+ALLOWED_HOSTS=localhost,127.0.0.1,api.your-domain.com
+CORS_ALLOWED_ORIGINS=https://weav-ai.pages.dev,https://your-frontend-domain.com
+FRONTEND_URL=https://weav-ai.pages.dev
+```
+
+### 3) Cloudflare Tunnel
+```bash
+# 로그인
+cloudflared tunnel login
+
+# 터널 생성
+cloudflared tunnel create weav-ai-home
+
+# 도메인 연결
+cloudflared tunnel route dns weav-ai-home api.your-domain.com
+
+# 실행 (nginx 사용 시 8080, Django 직접 노출 시 8000)
+cloudflared tunnel run --url http://localhost:8080 weav-ai-home
 ```
 
 ---
@@ -249,7 +286,7 @@ cat ~/.cloudflared/config.yml
 - [ ] `~/.cloudflared/config.yml` 설정 완료
 - [ ] DNS 레코드 설정 완료 (CNAME 추가)
 - [ ] 로컬 서버 실행 중 (`docker compose up -d`)
-- [ ] 프론트엔드 빌드 완료 (`npm run build`)
+- [ ] 프론트엔드 빌드 완료 (`cd frontend && npm run build`)
 - [ ] Nginx 설정 업데이트 완료
 - [ ] 프로덕션 환경 변수 설정 완료
 - [ ] Tunnel 실행 중

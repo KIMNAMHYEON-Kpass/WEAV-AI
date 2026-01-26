@@ -102,6 +102,18 @@ services:
     networks:
       - weav_network
 
+  # Frontend (Vite dev server)
+  frontend:
+    image: node:20-alpine
+    working_dir: /app
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0 --port 3000"
+    volumes:
+      - ../frontend:/app
+    ports:
+      - "3000:3000"
+    networks:
+      - weav_network
+
   # MinIO Object Storage
   minio:
     image: minio/minio
@@ -129,6 +141,7 @@ services:
       - ./staticfiles:/var/www/static:ro
     depends_on:
       - backend
+      - frontend
     networks:
       - weav_network
 

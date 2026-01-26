@@ -4,6 +4,10 @@ node_modules/
 .pnp.js
 .pnp.loader.mjs
 
+# Frontend (Vite in ./frontend)
+frontend/node_modules/
+frontend/dist/
+
 # Testing
 coverage/
 .nyc_output/

@@ -3,9 +3,9 @@
  * JWT 토큰 관리 및 API 요청 처리
  */
 
-const API_BASE_URL = import.meta.env.DEV 
-    ? 'http://localhost:8080' 
-    : (import.meta.env.VITE_API_BASE_URL || 'https://weavai.hub');
+const API_BASE_URL =
+    import.meta.env.VITE_API_BASE_URL ||
+    (import.meta.env.DEV ? 'http://localhost:8080' : 'https://weavai.hub');
 
 // JWT 토큰 저장 키
 const TOKEN_KEY = 'weav_jwt_access_token';
@@ -239,4 +239,5 @@ class APIClient {
     }
 }
 
+export { API_BASE_URL };
 export const apiClient = new APIClient(API_BASE_URL);

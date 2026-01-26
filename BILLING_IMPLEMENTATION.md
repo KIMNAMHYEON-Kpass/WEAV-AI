@@ -62,7 +62,7 @@ docker compose run --rm --entrypoint "" api python manage.py migrate
 
 ## 🧪 테스트
 
-1. 프론트: `VITE_PORTONE_*` 설정 후 `npm run dev`
+1. 프론트: `VITE_PORTONE_*` 설정 후 `cd frontend && npm run dev`
 2. 백엔드: `PORTONE_*`, `FRONTEND_URL` 설정 후 `docker compose up`
 3. 로그인 → `/pricing` → 플랜 선택 → 결제하기 → PortOne 결제창 → 결제 완료 후 `/billing/success` 확인
 4. `GET /api/v1/auth/profile/` 에서 `membership_type`, `membership_expires_at` 반영 확인
@@ -78,10 +78,10 @@ docker compose run --rm --entrypoint "" api python manage.py migrate
 | PortOne 조회 클라이언트 | `backend/payments/portone_client.py` |
 | Celery task (자동 복구) | `backend/payments/tasks.py` |
 | billing URL | `backend/payments/urls.py` |
-| 가격 페이지 | `src/components/billing/PricingPage.tsx` |
-| 결제 완료 페이지 | `src/components/billing/BillingSuccessPage.tsx` |
-| billing API | `src/services/billingService.ts` |
-| PortOne SDK 래퍼 | `src/services/portone.ts` |
+| 가격 페이지 | `frontend/src/components/billing/PricingPage.tsx` |
+| 결제 완료 페이지 | `frontend/src/components/billing/BillingSuccessPage.tsx` |
+| billing API | `frontend/src/services/billingService.ts` |
+| PortOne SDK 래퍼 | `frontend/src/services/portone.ts` |
 
 ---
 
