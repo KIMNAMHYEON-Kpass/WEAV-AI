@@ -58,6 +58,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
             // 비로그인: gpt-5.2-instant만 가능
             return model.id === 'gpt-5.2-instant';
         }
+        if (!FEATURE_FLAGS.enforceMembership) return true;
         if (FEATURE_FLAGS.bypassMembership) return true;
         if (!userInfo) return false;
         // 로그인: 멤버십 확인
@@ -220,7 +221,7 @@ ${hasStarted ? 'h-32 opacity-100' : 'h-0 opacity-0'}`}
                                         <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                                     </svg>
                                 </div>
-                                <span className="text-sm font-semibold text-blue-900 dark:text-blue-100">💡 추천 시작 프롬프트</span>
+                                <span className="text-sm font-semibold text-blue-900 dark:text-blue-100"> 추천 시작 프롬프트</span>
                             </div>
                             {onCloseRecommendedPrompts && (
                                 <button
@@ -264,7 +265,7 @@ ${hasStarted ? 'h-32 opacity-100' : 'h-0 opacity-0'}`}
                             ))}
                         </div>
                         <div className="mt-3 text-xs text-blue-600 dark:text-blue-400 opacity-70">
-                            💭 위 프롬프트 중 하나를 클릭하거나, 자유롭게 질문을 시작해보세요!
+                             위 프롬프트 중 하나를 클릭하거나, 자유롭게 질문을 시작해보세요!
                         </div>
                     </div>
                 )}

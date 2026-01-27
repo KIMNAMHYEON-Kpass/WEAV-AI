@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { CheckCircle, Loader2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { FEATURE_FLAGS } from '@/constants/featureFlags';
 
 export const BillingSuccessPage: React.FC = () => {
   const navigate = useNavigate();
@@ -12,6 +13,10 @@ export const BillingSuccessPage: React.FC = () => {
   useEffect(() => {
     const run = async () => {
       try {
+        if (FEATURE_FLAGS.hideBillingUI) {
+          setLoading(false);
+          return;
+        }
         if (refreshUserInfo) await refreshUserInfo();
         toast.success('멤버십이 활성화되었습니다.');
       } catch (e) {
@@ -37,13 +42,26 @@ export const BillingSuccessPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-[#050505] flex items-center justify-center px-4">
       <div className="max-w-md w-full bg-white dark:bg-[#1a1a1a] rounded-2xl shadow-lg border border-gray-200 dark:border-gray-800 p-8 text-center">
-        <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-          결제 완료!
-        </h1>
-        <p className="text-gray-600 dark:text-gray-400 mb-8">
-          멤버십이 활성화되었습니다. 이제 모든 프리미엄 기능을 사용할 수 있습니다.
-        </p>
+        {FEATURE_FLAGS.hideBillingUI ? (
+          <>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+              결제/멤버십 기능 준비중
+            </h1>
+            <p className="text-gray-600 dark:text-gray-400 mb-8">
+              현재는 결제 기능이 비활성화되어 있습니다.
+            </p>
+          </>
+        ) : (
+          <>
+            <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+              결제 완료!
+            </h1>
+            <p className="text-gray-600 dark:text-gray-400 mb-8">
+              멤버십이 활성화되었습니다. 이제 모든 프리미엄 기능을 사용할 수 있습니다.
+            </p>
+          </>
+        )}
         <button
           onClick={() => navigate('/')}
           className="w-full bg-blue-500 text-white py-3 rounded-lg font-semibold hover:bg-blue-600 transition-colors"

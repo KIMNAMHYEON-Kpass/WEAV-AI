@@ -2,6 +2,7 @@
 # AI 작업 관리 API (OpenAI, Gemini 연동) — 비동기 + 사용자별 목록/조회
 
 import logging
+from django.conf import settings
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
@@ -44,11 +45,12 @@ def list_or_create_jobs(request):
     # 이미지/비디오 생성은 프리미엄 기능 (멤버십 체크)
     model_id = serializer.validated_data.get('model_id', '')
     model_type = _model_type_from_model_id(model_id)
-    if model_type in ('image', 'video'):
+    if settings.ENFORCE_MEMBERSHIP and model_type in ('image', 'video'):
         if not request.user.can_use_premium_features:
             return Response(
                 {
                     'detail': '이미지/비디오 생성은 프리미엄 멤버십이 필요합니다.',
+                    'error_code': 'membership_required',
                     'membership_required': True,
                     'current_membership': request.user.membership_type,
                 },
@@ -63,6 +65,7 @@ def list_or_create_jobs(request):
         return Response(
             {
                 'detail': f'동시에 진행 가능한 작업은 최대 {MAX_CONCURRENT_JOBS_PER_USER}개입니다. 완료된 작업을 기다려 주세요.',
+                'error_code': 'max_concurrent_jobs',
                 'max_concurrent': MAX_CONCURRENT_JOBS_PER_USER,
             },
             status=status.HTTP_429_TOO_MANY_REQUESTS

@@ -57,9 +57,15 @@ def run_ai_job(self, job_id: str) -> None:
             model_type=model_type,
             arguments=arguments
         )
-    except (AIProviderError, AIRequestError, AIQuotaExceededError) as e:
+    except AIQuotaExceededError as e:
         job.status = 'FAILED'
-        job.error = str(e)
+        job.error = f"quota_exceeded: {e}"
+        job.save(update_fields=['status', 'error', 'updated_at'])
+        logger.error(f"AI job quota exceeded: {job_id} - {e}")
+        return
+    except (AIProviderError, AIRequestError) as e:
+        job.status = 'FAILED'
+        job.error = f"provider_error: {e}"
         job.save(update_fields=['status', 'error', 'updated_at'])
         logger.error(f"AI job failed: {job_id} - {e}")
         return

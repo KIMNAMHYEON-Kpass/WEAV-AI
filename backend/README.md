@@ -2,7 +2,7 @@
 
 Django REST Framework 기반의 AI 생성 서비스 백엔드입니다.
 
-## 🏗️ 아키텍처
+##  아키텍처
 
 ```
 Nginx → Django + DRF → PostgreSQL (User, Folder, ChatSession, Job, Artifact)
@@ -11,19 +11,19 @@ Nginx → Django + DRF → PostgreSQL (User, Folder, ChatSession, Job, Artifact)
                       → MinIO (파일 저장)
 ```
 
-## 🚀 빠른 시작
+##  빠른 시작
 
 ### Docker Compose로 실행 (권장)
 
 ```bash
-cd infra_WEAV
+cd infra
 docker compose up -d
 ```
 
 ### 마이그레이션
 
 ```bash
-cd infra_WEAV
+cd infra
 docker compose run --rm --entrypoint "" api python manage.py migrate
 ```
 
@@ -41,7 +41,7 @@ python manage.py runserver
 
 ---
 
-## 📡 주요 API 엔드포인트
+##  주요 API 엔드포인트
 
 ### 인증
 - `POST /api/v1/auth/verify-firebase-token/` - Firebase 토큰 검증, JWT 발급, **User·멤버십 DB 저장**
@@ -62,7 +62,7 @@ python manage.py runserver
 
 ---
 
-## 🔧 환경 변수
+##  환경 변수
 
 ### 필수
 
@@ -88,7 +88,7 @@ FIREBASE_SERVICE_ACCOUNT_KEY_PATH=/path/to/firebase-key.json
 
 ---
 
-## 🗄️ 데이터베이스 모델
+##  데이터베이스 모델
 
 ### User (커스텀 `users.User`)
 - Firebase UID → `username`
@@ -105,7 +105,7 @@ FIREBASE_SERVICE_ACCOUNT_KEY_PATH=/path/to/firebase-key.json
 
 ---
 
-## 🔒 보안
+##  보안
 
 - Firebase ID Token 검증 후 JWT 발급
 - 채팅·폴더·Jobs **사용자별 접근 제어**
@@ -114,16 +114,16 @@ FIREBASE_SERVICE_ACCOUNT_KEY_PATH=/path/to/firebase-key.json
 
 ---
 
-## 📊 현재 구현 상태
+##  현재 구현 상태
 
-### ✅ 완료
+###  완료
 - Firebase 토큰 검증, JWT, **User·멤버십 DB 저장**
 - **chats** API (폴더·채팅 CRUD)
 - **Jobs** API (목록/생성/상세), **Celery 비동기**, 사용자당 최대 4건
 - OpenAI 텍스트·이미지, SORA 비디오 (Jobs 경유)
 - PostgreSQL, Redis, MinIO 연동
 
-### 🔄 진행 중
+###  진행 중
 - Gemini API 연동 (코드 완료, 테스트)
 
 ---

@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { Folder, ChatSession } from '../types';
-import { aiService } from '../services/aiService';
-import { chatApi } from '../services/chatApi';
+import { aiService } from '../services/api/aiService';
+import { chatApi } from '../services/api/chatApi';
 import { useAuth } from './AuthContext';
 import { toast } from 'sonner';
 
@@ -24,15 +24,15 @@ const generateWelcomeMessage = (step: StepLike, projectName: string): string => 
         'sora': '혁신적인 동영상 생성 AI로, 창의적인 비디오 콘텐츠 제작에 최적화되어 있습니다.'
     };
 
-    const baseMessage = `🎯 **${projectName}** 프로젝트의 **${step.title}** 단계에 오신 것을 환영합니다!
+    const baseMessage = ` **${projectName}** 프로젝트의 **${step.title}** 단계에 오신 것을 환영합니다!
 
-🤖 **사용 모델:** ${modelNames[step.modelId] ?? step.modelId}
-📝 **모델 특징:** ${modelDescriptions[step.modelId] ?? '범용 AI 모델입니다.'}
+ **사용 모델:** ${modelNames[step.modelId] ?? step.modelId}
+ **모델 특징:** ${modelDescriptions[step.modelId] ?? '범용 AI 모델입니다.'}
 
-💡 **작업 개요:**
+ **작업 개요:**
 ${step.systemInstruction}
 
-✨ **시작하기 전에:**
+ **시작하기 전에:**
 아래 추천 프롬프트를 참고하여 대화를 시작해보세요. 각 프롬프트는 이 단계의 작업에 특화되어 설계되었습니다.`;
 
     return baseMessage;
@@ -136,7 +136,7 @@ interface FolderContextType {
 const FolderContext = createContext<FolderContextType | null>(null);
 
 export const FolderProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const { user } = useAuth();
+    const { user, loading: authLoading } = useAuth();
     const [folders, setFolders] = useState<Folder[]>([]);
     const [folderChats, setFolderChats] = useState<Record<string, ChatSession[]>>({});
     const [isGeneratingFolder, setIsGeneratingFolder] = useState(false);
@@ -144,6 +144,7 @@ export const FolderProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     // DB에서 폴더/폴더별 채팅 로드 (로그인 시)
     useEffect(() => {
+        if (authLoading) return;
         if (!user) {
             setFolders([]);
             setFolderChats({});
@@ -170,7 +171,7 @@ export const FolderProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             }
         })();
         return () => { ok = false; };
-    }, [user?.uid]);
+    }, [authLoading, user?.uid]);
 
     const createFolder = async (name: string, type: 'custom') => {
         if (!user) return;
@@ -198,9 +199,9 @@ export const FolderProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                 let si = step.systemInstruction;
                 if (i < plan.steps.length - 1) {
                     const next = plan.steps[i + 1];
-                    si += `\n\n📋 다음 단계 안내: 이 프로젝트는 총 ${plan.steps.length}단계로 구성되어 있으며, 다음 단계는 "${next?.title ?? ''}"입니다. 현재 단계의 결과를 다음 단계에서 최대한 활용할 수 있도록 체계적이고 구체적인 답변을 제공해주세요.`;
+                    si += `\n\n 다음 단계 안내: 이 프로젝트는 총 ${plan.steps.length}단계로 구성되어 있으며, 다음 단계는 "${next?.title ?? ''}"입니다. 현재 단계의 결과를 다음 단계에서 최대한 활용할 수 있도록 체계적이고 구체적인 답변을 제공해주세요.`;
                 } else {
-                    si += `\n\n🎯 최종 단계: 이 프로젝트의 마지막 단계입니다. 지금까지의 모든 단계를 종합하여 완성도 높은 최종 결과를 제시해주세요.`;
+                    si += `\n\n 최종 단계: 이 프로젝트의 마지막 단계입니다. 지금까지의 모든 단계를 종합하여 완성도 높은 최종 결과를 제시해주세요.`;
                 }
                 const welcomeMsg = {
                     id: `welcome-${f.id}-step${i + 1}`,

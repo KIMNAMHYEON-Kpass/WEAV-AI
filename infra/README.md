@@ -2,7 +2,7 @@
 
 Mac Mini + 외장하드 기반 프로덕션급 AI 생성 서비스 인프라입니다.
 
-## 🏗️ 서비스 구성
+##  서비스 구성
 
 - **Nginx**: 리버스 프록시 (포트 8080)
 - **Django + DRF**: API 서버 (포트 8000)
@@ -13,11 +13,11 @@ Mac Mini + 외장하드 기반 프로덕션급 AI 생성 서비스 인프라입�
 
 ---
 
-## 🚀 빠른 시작
+##  빠른 시작
 
 ### 1. 환경 변수
 
-`infra_WEAV/.env` 생성:
+`infra/.env` 생성:
 
 ```bash
 SECRET_KEY=your-secret-key
@@ -40,13 +40,13 @@ MINIO_ROOT_PASSWORD=your-password
 ### 2. MinIO 데이터 디렉터리
 
 ```bash
-mkdir -p infra_WEAV/minio-data
+mkdir -p infra/minio-data
 ```
 
 ### 3. 서비스 시작
 
 ```bash
-cd infra_WEAV
+cd infra
 docker compose up -d --build
 ```
 
@@ -66,7 +66,7 @@ curl http://localhost:8080/api/v1/health/
 
 ---
 
-## 🔧 주요 명령어
+##  주요 명령어
 
 ### 로그
 
@@ -97,7 +97,7 @@ docker compose restart api
 
 ---
 
-## 📊 모니터링
+##  모니터링
 
 - `GET /healthz` - Nginx
 - `GET /api/v1/health/` - DB, Redis, Celery 등
@@ -105,7 +105,7 @@ docker compose restart api
 
 ---
 
-## 🔒 보안
+##  보안
 
 - `.env`로 비밀 관리, Git 미커밋
 - 프로덕션 `DEBUG=False`

@@ -129,6 +129,8 @@ services:
       OPENAI_TEXT_MODEL: ${OPENAI_TEXT_MODEL:-gpt-4o-mini}
       GEMINI_API_KEY: ${GEMINI_API_KEY}
       GEMINI_TEXT_MODEL: ${GEMINI_TEXT_MODEL:-gemini-1.5-flash}
+      # Firebase Admin
+      FIREBASE_SERVICE_ACCOUNT_KEY_PATH: ${FIREBASE_SERVICE_ACCOUNT_KEY_PATH:-}
       AI_PROVIDER_DEFAULT: ${AI_PROVIDER_DEFAULT:-openai}
       MAX_TEXT_CHARS: ${MAX_TEXT_CHARS:-8000}
       MAX_OUTPUT_TOKENS: ${MAX_OUTPUT_TOKENS:-1024}
@@ -138,6 +140,8 @@ services:
       PORTONE_API_SECRET: ${PORTONE_API_SECRET:-}
       PORTONE_WEBHOOK_SECRET: ${PORTONE_WEBHOOK_SECRET:-}
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
+    volumes:
+      - ../backend:/app
     # 디버그: Django 직접 접근을 위한 임시 호스트 포트 바인딩 (프로덕션에서는 제거)
     ports:
       - "127.0.0.1:8000:8000"
@@ -193,12 +197,16 @@ services:
       OPENAI_TEXT_MODEL: ${OPENAI_TEXT_MODEL:-gpt-4o-mini}
       GEMINI_API_KEY: ${GEMINI_API_KEY}
       GEMINI_TEXT_MODEL: ${GEMINI_TEXT_MODEL:-gemini-1.5-flash}
+      # Firebase Admin
+      FIREBASE_SERVICE_ACCOUNT_KEY_PATH: ${FIREBASE_SERVICE_ACCOUNT_KEY_PATH:-}
       AI_PROVIDER_DEFAULT: ${AI_PROVIDER_DEFAULT:-openai}
       MAX_TEXT_CHARS: ${MAX_TEXT_CHARS:-8000}
       MAX_OUTPUT_TOKENS: ${MAX_OUTPUT_TOKENS:-1024}
       # Billing (PortOne) - Celery task에서 결제 조회 API 호출용
       USE_PORTONE: ${USE_PORTONE:-True}
       PORTONE_API_SECRET: ${PORTONE_API_SECRET:-}
+    volumes:
+      - ../backend:/app
     command: celery -A weavai worker -l INFO --concurrency=4 -n celery@%h
     # 워커는 포트 노출하지 않음
     healthcheck:
@@ -227,9 +235,9 @@ services:
       api:
         condition: service_healthy
     ports:
-      - "8080:80"  # 로컬 테스트용 포트 (Cloudflare Tunnel로 외부 접근)
+      - "127.0.0.1:8080:80"  # 로컬 전용 바인딩 (외부 접근 비활성)
     volumes:
-      - ./nginx/conf.d/weavai.conf:/etc/nginx/conf.d/default.conf:ro  # 기본 설정 파일 덮어쓰기
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro  # Nginx conf.d 전체 마운트
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost/healthz"]
       interval: 30s

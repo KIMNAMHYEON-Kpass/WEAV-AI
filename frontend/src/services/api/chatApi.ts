@@ -2,7 +2,7 @@
  * 채팅/폴더 API — DB 저장 (로그아웃 후 유지)
  */
 import { apiClient } from './apiClient';
-import type { ChatSession, Folder } from '../types';
+import type { ChatSession, Folder } from '../../types';
 
 const mapFolder = (r: any): Folder => ({
   id: String(r.id),

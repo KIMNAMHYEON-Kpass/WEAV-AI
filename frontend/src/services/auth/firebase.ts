@@ -7,7 +7,7 @@ import { toast } from 'sonner';
 const env = import.meta.env;
 
 if (import.meta.env.DEV) {
-  console.log("🔍 Firebase env check (dev only)");
+  console.log(" Firebase env check (dev only)");
   console.log("VITE_FIREBASE_API_KEY set:", Boolean(env?.VITE_FIREBASE_API_KEY));
   console.log("VITE_FIREBASE_AUTH_DOMAIN set:", Boolean(env?.VITE_FIREBASE_AUTH_DOMAIN));
   console.log("VITE_FIREBASE_PROJECT_ID set:", Boolean(env?.VITE_FIREBASE_PROJECT_ID));
@@ -44,12 +44,12 @@ const missingKeys = requiredKeys.filter(key => !env?.[key]);
 
 if (missingKeys.length > 0) {
   if (import.meta.env.DEV) {
-    console.warn("🚨 Firebase 설정 누락:", missingKeys);
-    console.warn("📝 다음 환경변수들을 .env 파일에 추가해주세요:");
+    console.warn(" Firebase 설정 누락:", missingKeys);
+    console.warn(" 다음 환경변수들을 .env 파일에 추가해주세요:");
     missingKeys.forEach(key => {
       console.warn(`   ${key}=your_value_here`);
     });
-    console.warn("🔗 Firebase Console: https://console.firebase.google.com/");
+    console.warn(" Firebase Console: https://console.firebase.google.com/");
   } else {
     console.error("Firebase 설정이 누락되어 초기화에 실패했습니다.");
   }
@@ -60,10 +60,10 @@ if (missingKeys.length > 0) {
     auth = getAuth(app);
     googleProvider = new GoogleAuthProvider();
     if (import.meta.env.DEV) {
-      console.log("✅ Firebase 초기화 성공!");
+      console.log(" Firebase 초기화 성공!");
     }
   } catch (error) {
-    console.error("❌ Firebase 초기화 실패:", error);
+    console.error(" Firebase 초기화 실패:", error);
   }
 }
 

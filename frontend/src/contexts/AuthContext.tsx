@@ -1,7 +1,8 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, onAuthStateChanged } from 'firebase/auth';
-import { auth, loginWithGoogle, logout } from '../services/firebase';
-import { userService } from '../services/userService';
+import { auth, loginWithGoogle, logout } from '../services/auth/firebase';
+import { userService } from '../services/auth/userService';
+import { toast } from 'sonner';
 
 interface UserInfo {
   uid: string;
@@ -59,6 +60,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
         } catch (error) {
           console.error("Failed to sync user or verify token:", error);
+          toast.error('인증 처리에 실패했습니다.', { description: '백엔드 연결 상태를 확인해주세요.' });
         }
       } else {
         // 로그아웃 시 토큰 및 사용자 정보 정리
@@ -87,6 +89,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     } catch (error) {
       console.error("Login failed", error);
+      toast.error('로그인에 실패했습니다.', { description: '인증 또는 네트워크 상태를 확인해주세요.' });
       throw error; // 에러를 상위로 전파하여 UI에서 처리할 수 있도록
     }
   };
@@ -112,6 +115,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // 여기서는 사용자 상태만 관리
     } catch (error) {
       console.error("Logout failed", error);
+      toast.error('로그아웃에 실패했습니다.');
       throw error;
     }
   };
@@ -126,6 +130,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     } catch (error) {
       console.error("Failed to refresh user info:", error);
+      toast.error('사용자 정보를 갱신할 수 없습니다.', { description: '백엔드 연결 상태를 확인해주세요.' });
     }
   };
 

@@ -2,6 +2,7 @@
 # 텍스트 채팅 완료 엔드포인트 (Gateway)
 
 import logging
+from django.conf import settings
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
@@ -93,7 +94,7 @@ def complete_chat(request):
             )
         
         # 프리미엄 모델 사용 시 멤버십 체크
-        if _is_premium_model(model_id):
+        if settings.ENFORCE_MEMBERSHIP and _is_premium_model(model_id):
             if not request.user.can_use_premium_features:
                 return Response(
                     {

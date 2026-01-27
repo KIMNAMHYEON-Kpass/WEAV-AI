@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Message, AIModel, ChatSession } from '../types';
-import { aiService } from '../services/aiService';
+import { aiService } from '../services/api/aiService';
 import { MODELS } from '../constants/models';
 
 interface UseChatProps {

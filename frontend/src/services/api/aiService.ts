@@ -1,5 +1,7 @@
-import { AIModel, Message } from "../types";
-import { VideoOptions } from "../components/chat/VideoOptions";
+import { AIModel, Message } from "../../types";
+import { VideoOptions } from "../../components/chat/VideoOptions";
+import { FEATURE_FLAGS } from "../../constants/featureFlags";
+import { MODELS } from "../../constants/models";
 
 // 백엔드 API 클라이언트 사용
 import { apiClient } from './apiClient';
@@ -12,16 +14,11 @@ import { apiClient } from './apiClient';
 
 
 // --- Access Control ---
-const checkAccess = (modelId: string, user: any) => {
-  // Guest User Constraints
+const checkAccess = (_modelId: string, user: any) => {
   if (!user) {
-    // Free Model for Guests
-    if (modelId === 'gpt-5.2-instant') {
-      return true;
-    }
-    throw new Error("Standard Membership Required");
+    throw new Error("로그인이 필요한 기능입니다.");
   }
-  // Logged-in users have full access (for now, based on instructions)
+  if (FEATURE_FLAGS.bypassMembership) return true;
   return true;
 };
 
@@ -33,6 +30,7 @@ export const aiService = {
   planProjectStructure: async (userGoal: string, user: any): Promise<{ projectName: string; steps: { title: string; modelId: string; systemInstruction: string }[] }> => {
     if (!user) throw new Error("로그인이 필요한 기능입니다.");
 
+    const allowedModelIds = MODELS.map((m) => m.id).join(', ');
     const prompt = `
       You are an expert AI Project Manager. The user wants to achieve the following goal: "${userGoal}".
       
@@ -40,11 +38,7 @@ export const aiService = {
       
       **CRITICAL RULES:**
       1.  **Strict Model Selection:** You MUST ONLY use the Model IDs listed below. Do NOT invent new model IDs.
-          - 'gpt-5.2-instant' (For brainstorming, simple text)
-          - 'gemini-3-flash' (For general fast chat)
-          - 'gpt-image-1.5' (For high-quality DALL-E 3 images)
-          - 'nano-banana' (For fast illustrations/logos)
-          - 'sora' (For video generation)
+          - Allowed model IDs: ${allowedModelIds}
           
       2.  **Language:** The 'projectName' and 'title' (step names) MUST be in **Korean (한국어)**. The 'systemInstruction' should also be in Korean.
       
@@ -66,7 +60,7 @@ export const aiService = {
     // 백엔드 Gateway 호출
     const result = await apiClient.post('/api/v1/chat/complete/', {
       provider: 'gemini',
-      model_id: 'gemini-3-pro-preview',
+      model_id: 'gemini-3-flash',
       input_text: prompt,
       system_prompt: 'You are an expert AI Project Manager. Always respond in valid JSON format only.',
       max_output_tokens: 2048
@@ -99,9 +93,15 @@ export const aiService = {
     const jobId = createRes.id;
     if (!jobId) throw new Error('작업 ID를 받지 못했습니다.');
 
-    const poll = async (): Promise<string | null> => {
+    const maxWaitMs = 10 * 60 * 1000;
+    const startedAt = Date.now();
+    const pollIntervalMs = 2000;
+    while (true) {
       if (signal?.aborted) throw new Error('비디오 생성이 중단되었습니다.');
-      const detail = (await apiClient.get(`/api/v1/jobs/${jobId}/`)) as { status: string; result?: { url?: string; text?: string }; error?: string };
+      if (Date.now() - startedAt > maxWaitMs) {
+        throw new Error('비디오 생성 시간이 초과되었습니다.');
+      }
+      const detail = (await apiClient.get(`/api/v1/jobs/${jobId}/`, { signal })) as { status: string; result?: { url?: string; text?: string }; error?: string };
       if (detail.status === 'COMPLETED') {
         if (detail.result?.url) return detail.result.url;
         throw new Error('비디오 생성 결과를 받지 못했습니다.');
@@ -109,11 +109,8 @@ export const aiService = {
       if (detail.status === 'FAILED') {
         throw new Error(detail.error || '비디오 생성에 실패했습니다.');
       }
-      await new Promise(r => setTimeout(r, 2000));
-      return poll();
-    };
-
-    return poll();
+      await new Promise(r => setTimeout(r, pollIntervalMs));
+    }
   },
 
   // --- Helper Functions ---
@@ -136,9 +133,15 @@ export const aiService = {
     const jobId = createRes.id;
     if (!jobId) throw new Error('작업 ID를 받지 못했습니다.');
 
-    const poll = async (): Promise<string | null> => {
+    const maxWaitMs = 2 * 60 * 1000;
+    const startedAt = Date.now();
+    const pollIntervalMs = 1500;
+    while (true) {
       if (signal?.aborted) throw new Error('이미지 생성이 중단되었습니다.');
-      const detail = (await apiClient.get(`/api/v1/jobs/${jobId}/`)) as { status: string; result?: { url?: string; text?: string }; error?: string };
+      if (Date.now() - startedAt > maxWaitMs) {
+        throw new Error('이미지 생성 시간이 초과되었습니다.');
+      }
+      const detail = (await apiClient.get(`/api/v1/jobs/${jobId}/`, { signal })) as { status: string; result?: { url?: string; text?: string }; error?: string };
       if (detail.status === 'COMPLETED') {
         if (detail.result?.url) return detail.result.url;
         throw new Error('이미지 생성 결과를 받지 못했습니다.');
@@ -146,11 +149,8 @@ export const aiService = {
       if (detail.status === 'FAILED') {
         throw new Error(detail.error || '이미지 생성에 실패했습니다.');
       }
-      await new Promise(r => setTimeout(r, 1500));
-      return poll();
-    };
-
-    return poll();
+      await new Promise(r => setTimeout(r, pollIntervalMs));
+    }
   },
 
   /**
@@ -168,7 +168,7 @@ export const aiService = {
     try {
       // provider 결정
       let provider = 'openai';
-      if (model.category === 'Gemini' || 'gemini' in (model.id || '').toLowerCase()) {
+      if (model.category === 'Gemini' || (model.id || '').toLowerCase().includes('gemini')) {
         provider = 'gemini';
       }
 
@@ -212,7 +212,8 @@ export const aiService = {
     } catch (error: any) {
       if (signal?.aborted) return;
       console.error("Text Generation Error:", error);
-      yield `\n[오류 발생: ${error.message || "API Error"}]`;
+      const message = error?.message || "API Error";
+      yield `\n[오류 발생: ${message}]`;
     }
   }
 };

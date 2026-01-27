@@ -2,9 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Check, Zap, Sparkles, Loader2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { getPlans, preparePayment, completePayment, Plan } from '@/services/billingService';
-import { requestPayment } from '@/services/portone';
+import { getPlans, preparePayment, completePayment, Plan } from '@/services/api/billingService';
+import { requestPayment } from '@/services/payments/portone';
 import { toast } from 'sonner';
+import { FEATURE_FLAGS } from '@/constants/featureFlags';
 
 const STORE_ID = import.meta.env.VITE_PORTONE_STORE_ID ?? '';
 const CHANNEL_KEY = import.meta.env.VITE_PORTONE_CHANNEL_KEY ?? '';
@@ -17,6 +18,10 @@ export const PricingPage: React.FC = () => {
   const [processing, setProcessing] = useState<string | null>(null);
 
   useEffect(() => {
+    if (FEATURE_FLAGS.hideBillingUI) {
+      setLoading(false);
+      return;
+    }
     loadPlans();
   }, []);
 
@@ -33,6 +38,10 @@ export const PricingPage: React.FC = () => {
   };
 
   const handleSubscribe = async (plan: Plan) => {
+    if (FEATURE_FLAGS.hideBillingUI) {
+      toast.info('결제 기능이 비활성화되어 있습니다.');
+      return;
+    }
     if (!user) {
       toast.error('로그인이 필요합니다.');
       navigate('/login');
@@ -77,6 +86,27 @@ export const PricingPage: React.FC = () => {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-[#050505] flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
+      </div>
+    );
+  }
+
+  if (FEATURE_FLAGS.hideBillingUI) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-[#050505] flex items-center justify-center px-4">
+        <div className="max-w-md w-full bg-white dark:bg-[#1a1a1a] rounded-2xl shadow-lg border border-gray-200 dark:border-gray-800 p-8 text-center">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+            결제/멤버십 기능 준비중
+          </h1>
+          <p className="text-gray-600 dark:text-gray-400 mb-8">
+            현재는 결제 기능이 비활성화되어 있습니다.
+          </p>
+          <button
+            onClick={() => navigate('/')}
+            className="w-full bg-blue-500 text-white py-3 rounded-lg font-semibold hover:bg-blue-600 transition-colors"
+          >
+            홈으로 돌아가기
+          </button>
+        </div>
       </div>
     );
   }

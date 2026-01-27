@@ -211,8 +211,17 @@ DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
 OPENAI_API_KEY = config('OPENAI_API_KEY', default='')
 GEMINI_API_KEY = config('GEMINI_API_KEY', default='')
 
+# Billing / Membership (개발 기본: 비활성)
+ENFORCE_MEMBERSHIP = config('ENFORCE_MEMBERSHIP', default=False, cast=bool)
+ENABLE_BILLING = config('ENABLE_BILLING', default=False, cast=bool)
+ALLOW_BILLING_IN_DEBUG = config('ALLOW_BILLING_IN_DEBUG', default=False, cast=bool)
+
+if DEBUG and not ALLOW_BILLING_IN_DEBUG:
+    ENABLE_BILLING = False
+    ENFORCE_MEMBERSHIP = False
+
 # Billing: PortOne (기본) / Stripe (선택)
-USE_PORTONE = config('USE_PORTONE', default=True, cast=bool)
+USE_PORTONE = config('USE_PORTONE', default=False, cast=bool)
 USE_STRIPE = config('USE_STRIPE', default=False, cast=bool)
 
 # PortOne (비밀키는 백엔드 전용)

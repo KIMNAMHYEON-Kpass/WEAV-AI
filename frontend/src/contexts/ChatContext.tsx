@@ -3,8 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { Message, AIModel, ChatSession, PromptTemplate } from '../types';
 import { VideoOptions } from '../components/chat/VideoOptions';
 import { MODELS } from '../constants/models';
-import { aiService } from '../services/aiService';
-import { chatApi } from '../services/chatApi';
+import { aiService } from '../services/api/aiService';
+import { chatApi } from '../services/api/chatApi';
+import { APIError } from '../services/api/apiClient';
 import { useFolder } from './FolderContext';
 import { useAuth } from './AuthContext';
 import { toast } from 'sonner';
@@ -44,7 +45,7 @@ const ChatContext = createContext<ChatContextType | null>(null);
 
 export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const navigate = useNavigate();
-    const { user } = useAuth();
+    const { user, loading: authLoading } = useAuth();
     const { addChatToFolder, updateFolderChat, folderChats, removeChatFromFolder } = useFolder();
 
     // Persisted Recent Chats (사용자별로 분리)
@@ -52,6 +53,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     // 사용자 변경 시 초기화 및 최근 채팅 DB 로드
     useEffect(() => {
+        if (authLoading) return;
         if (!user) {
             setMessages([]);
             setRecentChats([]);
@@ -68,11 +70,12 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 setRecentChats(list);
             } catch (e) {
                 console.error('Failed to load recent chats:', e);
+                toast.error('최근 채팅을 불러오지 못했습니다.', { description: '백엔드 연결 상태를 확인해주세요.' });
                 setRecentChats([]);
             }
         })();
         return () => { ok = false; };
-    }, [user?.uid]);
+    }, [authLoading, user?.uid]);
 
     // Current Chat UI State
     const [messages, setMessages] = useState<Message[]>([]);
@@ -95,6 +98,33 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const abortControllerRef = useRef<AbortController | null>(null);
 
     const recentPersistRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    const errorToMessage = (error: unknown): string => {
+        if (error instanceof APIError) {
+            const data: any = error.data || {};
+            if (error.status === 403 && data.membership_required) {
+                return '이 기능은 멤버십이 필요합니다.';
+            }
+            if (error.status === 429) {
+                return '요청이 너무 많습니다. 잠시 후 다시 시도해주세요.';
+            }
+            if (data.detail || data.error) {
+                return data.detail || data.error;
+            }
+            return error.message || '요청 처리에 실패했습니다.';
+        }
+        if (typeof (error as any)?.message === 'string') {
+            const msg = (error as any).message as string;
+            if (msg.includes('Failed to fetch') || msg.includes('NetworkError')) {
+                return '백엔드 연결에 실패했습니다. 서버 상태를 확인해주세요.';
+            }
+            return msg;
+        }
+        if (error && typeof error === 'object' && 'message' in error) {
+            return (error as any).message || '요청 처리에 실패했습니다.';
+        }
+        return '요청 처리에 실패했습니다.';
+    };
 
 
     useEffect(() => {
@@ -125,6 +155,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     });
                 } catch (e) {
                     console.warn('Failed to persist recent chat:', e);
+                    toast.error('채팅 저장에 실패했습니다.', { description: '네트워크 상태를 확인해주세요.' });
                 }
             }, 1500);
         }
@@ -251,7 +282,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 }
                 navigate(`/chat/${c.id}`);
             } catch (e: any) {
-                toast.error(e?.message || '채팅을 만들 수 없습니다.');
+                toast.error(errorToMessage(e));
                 return;
             }
         }
@@ -382,9 +413,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
         } catch (error: any) {
             if (error.name !== 'AbortError') {
                 console.error(error);
-                const errorMessage = error.message === "Standard Membership Required"
-                    ? "이 모델을 사용하려면 스탠다드 멤버십이 필요합니다."
-                    : error.message || "오류가 발생했습니다.";
+                const errorMessage = errorToMessage(error);
 
                 setMessages(prev => prev.map(m => m.id === botMessageId ? { ...m, content: `[${errorMessage}]`, isStreaming: false } : m));
                 toast.error("메시지 전송 실패", { description: errorMessage });

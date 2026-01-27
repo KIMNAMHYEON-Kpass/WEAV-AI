@@ -4,24 +4,24 @@ AI 기반 콘텐츠 생성 플랫폼. 사용자가 목표를 입력하면 AI가 
 
 ---
 
-## 🎯 프로젝트 개요
+##  프로젝트 개요
 
 **WEAV-AI**는 AI 기반 콘텐츠 생성 플랫폼입니다. 사용자가 프로젝트 목표를 입력하면 AI가 자동으로 작업 단계를 계획하고, 각 단계에 맞는 AI 모델을 선택하여 텍스트, 이미지, 비디오를 생성할 수 있습니다.
 
 ### 핵심 기능
 
-- 🤖 **AI 기반 프로젝트 계획**: 사용자 목표 분석 → 단계별 작업 계획 생성
-- 💬 **멀티 모델 채팅**: OpenAI GPT, Google Gemini 등 다양한 모델 지원
-- 🎨 **이미지 생성**: DALL-E 3 기반 (비동기 Jobs API)
-- 🎬 **비디오 생성**: SORA, VEO (비동기 Jobs API)
-- 📁 **폴더·채팅 DB 저장**: 로그인 후 작업 내용 DB 유지, 로그아웃·재로그인 시 복원
-- 🎨 **다크/라이트 모드**: 사용자 맞춤형 테마 지원
-- 🔐 **Google 로그인**: Firebase 인증 + 백엔드 JWT + **사용자·멤버십 DB 저장**
-- 👀 **비로그인 둘러보기**: 화면은 모두 공개, 기능 사용 시 로그인/멤버십 유도
+-  **AI 기반 프로젝트 계획**: 사용자 목표 분석 → 단계별 작업 계획 생성
+-  **멀티 모델 채팅**: OpenAI GPT, Google Gemini 등 다양한 모델 지원
+-  **이미지 생성**: DALL-E 3 기반 (비동기 Jobs API)
+-  **비디오 생성**: SORA, VEO (비동기 Jobs API)
+-  **폴더·채팅 DB 저장**: 로그인 후 작업 내용 DB 유지, 로그아웃·재로그인 시 복원
+-  **다크/라이트 모드**: 사용자 맞춤형 테마 지원
+-  **Google 로그인**: Firebase 인증 + 백엔드 JWT + **사용자·멤버십 DB 저장**
+-  **비로그인 둘러보기**: 화면은 모두 공개, 기능 사용 시 로그인/멤버십 유도
 
 ---
 
-## 🏗️ 아키텍처
+##  아키텍처
 
 ```
 사용자 (브라우저)
@@ -43,7 +43,7 @@ Nginx (리버스 프록시, 포트 8080)
 
 ---
 
-## 🛠️ 기술 스택
+##  기술 스택
 
 ### 프론트엔드
 - React 18 + TypeScript + Vite
@@ -66,7 +66,7 @@ Nginx (리버스 프록시, 포트 8080)
 
 ---
 
-## 🚀 빠른 시작
+##  빠른 시작
 
 ### 1. 환경 변수 설정
 
@@ -84,7 +84,7 @@ VITE_PORTONE_STORE_ID=...
 VITE_PORTONE_CHANNEL_KEY=...
 ```
 
-#### 백엔드 (`infra_WEAV/.env`)
+#### 백엔드 (`infra/.env`)
 ```bash
 SECRET_KEY=your-secret-key
 DEBUG=True
@@ -119,14 +119,14 @@ FRONTEND_URL=http://localhost:3000
 ### 2. 백엔드 실행
 
 ```bash
-cd infra_WEAV
+cd infra
 docker compose up -d
 ```
 
 ### 3. 마이그레이션 (최초 1회)
 
 ```bash
-cd infra_WEAV
+cd infra
 docker compose run --rm --entrypoint "" api python manage.py migrate
 ```
 
@@ -148,7 +148,7 @@ npm run dev
 
 ---
 
-## 📡 주요 API 엔드포인트
+##  주요 API 엔드포인트
 
 ### 인증
 - `POST /api/v1/auth/verify-firebase-token/` - Firebase 토큰 검증, JWT 발급, **사용자·멤버십 DB 저장**
@@ -176,9 +176,9 @@ npm run dev
 
 ---
 
-## 📊 현재 진행 상황
+##  현재 진행 상황
 
-### ✅ 완료 (프로덕션 준비 완료)
+###  완료 (프로덕션 준비 완료)
 - **프론트엔드**: React + TypeScript, 채팅/폴더 UI, 다크/라이트 모드, 비로그인 둘러보기
 - **인증**: Google 로그인 (Firebase + JWT), 사용자·멤버십 DB 저장
 - **멤버십**: 커스텀 User 모델 (free/standard/premium), 만료일 관리, 프리미엄 기능 체크
@@ -186,20 +186,20 @@ npm run dev
 - **AI 작업**: Jobs API (비동기 Celery), 사용자당 최대 4건 동시 처리, 폴링 지원
 - **AI 모델**:
   - **텍스트**: OpenAI GPT-4o-mini, Google Gemini 1.5 Flash/Pro
-  - **이미지**: OpenAI DALL-E 3, Google Gemini 2.5 Flash Image (Nano Banana) ✅
+  - **이미지**: OpenAI DALL-E 3, Google Gemini 2.5 Flash Image (Nano Banana) 
   - **비디오**: OpenAI Sora 2 (API 공개 시 자동 동작)
 - **결제**: PortOne 일회 30일권, `/pricing` 페이지, prepare/complete/webhook, Celery 자동복구
-- **인프라**: Docker Compose (infra_WEAV), PostgreSQL, Redis, MinIO, Nginx (resolver + 변수), Celery Worker
+- **인프라**: Docker Compose (infra), PostgreSQL, Redis, MinIO, Nginx (resolver + 변수), Celery Worker
 - **보안**: AI Gateway (백엔드 라우팅), API 키 서버 전용, 멤버십 기반 프리미엄 기능 제한
 
-### 📋 향후 계획
+###  향후 계획
 - 정기결제 (빌링키 + Celery Beat)
 - Rate Limit / Quota 강화
 - 실시간 작업 진행률 UI (선택)
 
 ---
 
-## 🔒 보안
+##  보안
 
 - AI API 키는 백엔드 전용 (프론트 노출 금지)
 - Firebase ID Token 검증 후 JWT 발급
@@ -208,15 +208,17 @@ npm run dev
 
 ---
 
-## 📚 문서
+##  문서
 
-- [배포 가이드](./DEPLOYMENT_GUIDE.md) - Cloudflare Tunnel 배포
-- [프로젝트 문서](./PROJECT_DOCUMENTATION.md) - 상세 기술 문서
-- [결제 (PortOne)](./BILLING_IMPLEMENTATION.md) - Billing MVP 설정 및 플로우
+- [배포 가이드](./docs/배포_가이드.md) - Cloudflare Tunnel 배포
+- [프로젝트 문서](./docs/프로젝트_문서.md) - 상세 기술 문서
+- [결제 (PortOne)](./docs/결제_구현_가이드.md) - Billing MVP 설정 및 플로우
+- [빠른 시작](./docs/빠른_시작_가이드.md) - 바로 실행하는 단계별 가이드
+- [테스트 로드맵](./docs/테스트_로드맵.md) - 구조 변경 후 점검 절차
 - [백엔드 README](./backend/README.md) - 백엔드 설정
-- [인프라 README](./infra_WEAV/README.md) - 인프라 설정
+- [인프라 README](./infra/README.md) - 인프라 설정
 
 ---
 
 **마지막 업데이트**: 2026-01-24  
-**프로젝트 상태**: 프로덕션 준비 완료 ✅
+**프로젝트 상태**: 프로덕션 준비 완료 

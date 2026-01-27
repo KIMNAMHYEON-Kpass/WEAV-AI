@@ -1,7 +1,7 @@
 import { getFirestore, doc, getDoc, setDoc, serverTimestamp, updateDoc } from 'firebase/firestore';
 import { User } from 'firebase/auth';
 import { app } from './firebase';
-import { apiClient, tokenManager, API_BASE_URL } from './apiClient';
+import { apiClient, tokenManager, API_BASE_URL } from '../api/apiClient';
 import { toast } from 'sonner';
 
 const db = getFirestore(app);
