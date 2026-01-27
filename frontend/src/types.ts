@@ -13,6 +13,7 @@ export interface AIModel {
   readonly name: string;
   readonly category: ModelCategory;
   readonly apiModelName: string;
+  readonly provider?: 'fal' | 'openai' | 'gemini';
   readonly isVideo?: boolean;
   readonly isImage?: boolean;
 }

@@ -36,7 +36,7 @@ class JobCreateSerializer(serializers.ModelSerializer):
 
     def validate_provider(self, value):
         """지원하는 제공자인지 검증"""
-        supported_providers = ['openai', 'gemini']  # FAL.ai 제외
+        supported_providers = ['fal', 'openai', 'gemini']
         if value not in supported_providers:
             raise serializers.ValidationError(f"지원하지 않는 제공자입니다: {value}. 지원: {supported_providers}")
         return value

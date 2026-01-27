@@ -59,7 +59,7 @@ export const aiService = {
 
     // 백엔드 Gateway 호출
     const result = await apiClient.post('/api/v1/chat/complete/', {
-      provider: 'gemini',
+      provider: 'fal',
       model_id: 'gemini-3-flash',
       input_text: prompt,
       system_prompt: 'You are an expert AI Project Manager. Always respond in valid JSON format only.',
@@ -77,7 +77,7 @@ export const aiService = {
    */
   generateVideo: async (model: AIModel, prompt: string, videoOptions: VideoOptions, user: any, signal?: AbortSignal): Promise<string | null> => {
     const jobData = {
-      provider: model.provider || 'openai',
+      provider: model.provider || 'fal',
       model_id: model.id,
       arguments: {
         prompt,
@@ -123,7 +123,7 @@ export const aiService = {
    */
   generateImage: async (model: AIModel, prompt: string, user: any, signal?: AbortSignal): Promise<string | null> => {
     const jobData = {
-      provider: model.provider || 'openai',
+      provider: model.provider || 'fal',
       model_id: model.id,
       arguments: { prompt },
       store_result: true
@@ -167,10 +167,7 @@ export const aiService = {
 
     try {
       // provider 결정
-      let provider = 'openai';
-      if (model.category === 'Gemini' || (model.id || '').toLowerCase().includes('gemini')) {
-        provider = 'gemini';
-      }
+      let provider = model.provider || 'fal';
 
       // 히스토리 변환
       const historyArray = history

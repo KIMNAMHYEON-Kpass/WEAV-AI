@@ -5,6 +5,7 @@ import os
 from typing import Dict, Any, Union
 from .openai_client import OpenAIClient
 from .gemini_client import GeminiClient
+from .fal_client import FalClient
 from .schemas import TextGenerationRequest, ImageGenerationRequest, VideoGenerationRequest
 from .errors import AIServiceError, AIProviderError
 
@@ -23,6 +24,8 @@ class AIServiceRouter:
                 self.clients[provider] = OpenAIClient()
             elif provider == 'gemini':
                 self.clients[provider] = GeminiClient()
+            elif provider == 'fal':
+                self.clients[provider] = FalClient()
             else:
                 raise AIProviderError(provider, f"지원하지 않는 AI 제공자: {provider}")
 

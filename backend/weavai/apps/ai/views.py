@@ -61,7 +61,7 @@ def complete_chat(request):
     
     Request Body:
     {
-        "provider": "openai" | "gemini",
+        "provider": "fal" | "openai" | "gemini",
         "model_id": "gpt-4o-mini" | "gemini-1.5-flash" | ...,
         "input_text": "사용자 입력",
         "system_prompt": "시스템 프롬프트 (선택)",
@@ -79,7 +79,7 @@ def complete_chat(request):
     }
     """
     try:
-        provider = request.data.get('provider', 'openai')
+        provider = request.data.get('provider') or getattr(settings, 'AI_PROVIDER_DEFAULT', 'openai')
         model_id = request.data.get('model_id')
         input_text = request.data.get('input_text')
         system_prompt = request.data.get('system_prompt')
