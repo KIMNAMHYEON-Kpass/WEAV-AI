@@ -1,0 +1,9 @@
+# 기본: 자동 줄바꿈 정규화 (모든 OS에서 동일 동작)
+* text=auto
+
+# 셸 스크립트: 항상 LF (Docker/ Linux 컨테이너에서 실행되므로)
+*.sh text eol=lf
+
+# Windows 배치/ PowerShell: CRLF 허용 (선택)
+# *.ps1 text eol=crlf
+# *.cmd text eol=crlf

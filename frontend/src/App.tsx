@@ -10,7 +10,7 @@ function AppContent() {
   useApp();
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white flex flex-col">
+    <div className="min-h-screen bg-background text-foreground flex flex-col">
       <AppHeader onMenuClick={() => setSidebarOpen(true)} />
       <div className="flex-1 flex overflow-hidden">
         <ChatView />

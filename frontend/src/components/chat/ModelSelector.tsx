@@ -15,7 +15,7 @@ export function ModelSelector({ kind, value, onChange }: ModelSelectorProps) {
     <select
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="bg-gray-800 text-white border border-gray-600 rounded px-3 py-2 text-sm min-w-[180px]"
+      className="bg-input text-foreground border border-input rounded px-3 py-2 text-sm min-w-[180px]"
     >
       {models.map((m) => (
         <option key={m.id} value={m.id}>

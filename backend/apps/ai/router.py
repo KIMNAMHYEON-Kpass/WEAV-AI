@@ -1,5 +1,5 @@
-from .fal_client import chat_completion, image_generation_fal, image_generation_openai
-from .errors import AIError, OpenAIError
+from .fal_client import chat_completion, image_generation_fal
+from .errors import AIError
 
 CHAT_MODELS = [
     'google/gemini-2.5-flash',
@@ -10,7 +10,6 @@ CHAT_MODELS = [
 ]
 
 IMAGE_MODEL_GOOGLE = 'fal-ai/imagen4/preview'
-IMAGE_MODEL_OPENAI = 'openai/dall-e-3'
 IMAGE_MODEL_FLUX = 'fal-ai/flux-pro/v1.1-ultra'
 
 
@@ -19,6 +18,4 @@ def run_chat(prompt: str, model: str = 'google/gemini-2.5-flash', system_prompt:
 
 
 def run_image(prompt: str, model: str = IMAGE_MODEL_GOOGLE, aspect_ratio: str = '1:1', num_images: int = 1) -> list[dict]:
-    if model == IMAGE_MODEL_OPENAI or 'dall-e' in model.lower():
-        return image_generation_openai(prompt, size='1024x1024', num_images=num_images)
     return image_generation_fal(prompt, model=model, aspect_ratio=aspect_ratio, num_images=num_images)

@@ -27,7 +27,6 @@ dist/
 # But allow .env.example files
 !.env.example
 !backend/.env.example
-!backend/env.example
 !infra/.env.example
 
 # IDE and Editor
@@ -82,7 +81,6 @@ infra/minio-data/
 **/*firebase*service*.json
 **/*-firebase-admin*.json
 **/*firebase-adminsdk*.json
-backend/weavai/apps/ai/system_rules.py
 infra/package-lock.json
 
 # SSL/TLS certificates
@@ -119,22 +117,6 @@ venv.bak/
 local_settings.py
 db.sqlite3
 db.sqlite3-journal
-
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
-
-# OS
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
 
 # Optional npm cache directory
 .npm

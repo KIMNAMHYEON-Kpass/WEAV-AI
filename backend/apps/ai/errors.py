@@ -6,8 +6,3 @@ class AIError(Exception):
 class FALError(AIError):
     """fal.ai API error."""
     pass
-
-
-class OpenAIError(AIError):
-    """OpenAI API error."""
-    pass

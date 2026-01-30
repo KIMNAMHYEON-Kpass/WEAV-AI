@@ -10,6 +10,5 @@ export const CHAT_MODELS: ChatModel[] = [
 
 export const IMAGE_MODELS: ImageModel[] = [
   { id: 'fal-ai/imagen4/preview', name: 'Imagen 4 (Google)', provider: 'Google' },
-  { id: 'openai/dall-e-3', name: 'DALL-E 3 (OpenAI)', provider: 'OpenAI' },
   { id: 'fal-ai/flux-pro/v1.1-ultra', name: 'FLUX Pro v1.1 Ultra', provider: 'fal.ai' },
 ];

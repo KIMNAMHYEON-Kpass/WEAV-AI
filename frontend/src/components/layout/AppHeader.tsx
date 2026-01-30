@@ -5,16 +5,16 @@ type AppHeaderProps = { onMenuClick: () => void };
 
 export function AppHeader({ onMenuClick }: AppHeaderProps) {
   return (
-    <header className="sticky top-0 z-30 flex items-center h-14 px-4 bg-gray-900 border-b border-gray-700">
+    <header className="sticky top-0 z-30 flex items-center h-14 px-4 bg-card border-b border-border">
       <button
         type="button"
         onClick={onMenuClick}
-        className="p-2 rounded hover:bg-gray-700 text-gray-300"
+        className="p-2 rounded hover:bg-accent text-primary-foreground"
         aria-label="메뉴 열기"
       >
         <Menu size={24} />
       </button>
-      <span className="ml-3 font-semibold text-white">WEAV AI</span>
+      <span className="ml-3 font-semibold text-foreground">WEAV AI</span>
     </header>
   );
 }

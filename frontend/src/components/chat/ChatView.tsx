@@ -13,7 +13,7 @@ export function ChatView() {
 
   if (!currentSession) {
     return (
-      <div className="flex-1 flex items-center justify-center text-gray-500">
+      <div className="flex-1 flex items-center justify-center text-muted-foreground">
         <p>왼쪽 메뉴에서 새 채팅 또는 새 이미지를 시작하세요.</p>
       </div>
     );
@@ -28,7 +28,7 @@ export function ChatView() {
       <main className="flex-1 overflow-y-auto px-4 pt-6 pb-40">
         {isChat ? (
           messages.length === 0 ? (
-            <div className="text-center text-gray-500 py-12">
+            <div className="text-center text-muted-foreground py-12">
               <p>메시지를 입력하고 전송하세요.</p>
             </div>
           ) : (
@@ -37,19 +37,19 @@ export function ChatView() {
         ) : (
           <>
             {imageRecords.length === 0 && (
-              <div className="text-center text-gray-500 py-12">
+              <div className="text-center text-muted-foreground py-12">
                 <p>이미지 설명을 입력하고 생성하세요.</p>
               </div>
             )}
             <div className="grid gap-4 sm:grid-cols-2">
               {imageRecords.map((rec) => (
-                <div key={rec.id} className="rounded-lg overflow-hidden bg-gray-800">
+                <div key={rec.id} className="rounded-lg overflow-hidden bg-card">
                   <img
                     src={rec.image_url}
                     alt={rec.prompt}
                     className="w-full h-auto object-cover"
                   />
-                  <p className="p-2 text-sm text-gray-400 truncate" title={rec.prompt}>
+                  <p className="p-2 text-sm text-muted-foreground truncate" title={rec.prompt}>
                     {rec.prompt}
                   </p>
                 </div>

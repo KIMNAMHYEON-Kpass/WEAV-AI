@@ -29,10 +29,10 @@ export function Sidebar({ open, onClose }: SidebarProps) {
   return (
     <>
       <div className="fixed inset-0 bg-black/50 z-40" onClick={onClose} aria-hidden />
-      <aside className="fixed left-0 top-0 bottom-0 w-72 bg-gray-900 text-white z-50 flex flex-col shadow-xl">
-        <div className="p-4 border-b border-gray-700 flex items-center justify-between">
+      <aside className="fixed left-0 top-0 bottom-0 w-72 bg-card text-foreground z-50 flex flex-col shadow-xl">
+        <div className="p-4 border-b border-border flex items-center justify-between">
           <span className="font-semibold">WEAV AI</span>
-          <button type="button" onClick={onClose} className="p-1 hover:bg-gray-700 rounded">
+          <button type="button" onClick={onClose} className="p-1 hover:bg-accent rounded">
             ✕
           </button>
         </div>
@@ -40,23 +40,23 @@ export function Sidebar({ open, onClose }: SidebarProps) {
           <button
             type="button"
             onClick={handleNewChat}
-            className="flex-1 flex items-center justify-center gap-2 py-2 rounded bg-gray-700 hover:bg-gray-600 text-sm"
+            className="flex-1 flex items-center justify-center gap-2 py-2 rounded bg-muted hover:bg-muted-foreground text-sm"
           >
             <MessageSquare size={16} /> 새 채팅
           </button>
           <button
             type="button"
             onClick={handleNewImage}
-            className="flex-1 flex items-center justify-center gap-2 py-2 rounded bg-gray-700 hover:bg-gray-600 text-sm"
+            className="flex-1 flex items-center justify-center gap-2 py-2 rounded bg-muted hover:bg-muted-foreground text-sm"
           >
             <Image size={16} /> 새 이미지
           </button>
         </div>
         <div className="flex-1 overflow-y-auto p-2">
           <div className="mb-4">
-            <h3 className="text-xs font-medium text-gray-400 uppercase tracking-wider px-2 mb-1">채팅</h3>
+            <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 mb-1">채팅</h3>
             {chatSessions.length === 0 && (
-              <p className="text-gray-500 text-sm px-2">채팅 내역이 없습니다.</p>
+              <p className="text-muted-foreground text-sm px-2">채팅 내역이 없습니다.</p>
             )}
             {chatSessions.map((s) => (
               <button
@@ -64,7 +64,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
                 type="button"
                 onClick={() => handleSelect(s)}
                 className={`w-full text-left px-3 py-2 rounded text-sm truncate block ${
-                  currentSession?.id === s.id ? 'bg-gray-700' : 'hover:bg-gray-800'
+                  currentSession?.id === s.id ? 'bg-accent' : 'hover:bg-accent'
                 }`}
               >
                 {s.title || `채팅 ${s.id}`}
@@ -72,9 +72,9 @@ export function Sidebar({ open, onClose }: SidebarProps) {
             ))}
           </div>
           <div>
-            <h3 className="text-xs font-medium text-gray-400 uppercase tracking-wider px-2 mb-1">이미지</h3>
+            <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 mb-1">이미지</h3>
             {imageSessions.length === 0 && (
-              <p className="text-gray-500 text-sm px-2">이미지 생성 내역이 없습니다.</p>
+              <p className="text-muted-foreground text-sm px-2">이미지 생성 내역이 없습니다.</p>
             )}
             {imageSessions.map((s) => (
               <button
@@ -82,7 +82,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
                 type="button"
                 onClick={() => handleSelect(s)}
                 className={`w-full text-left px-3 py-2 rounded text-sm truncate block ${
-                  currentSession?.id === s.id ? 'bg-gray-700' : 'hover:bg-gray-800'
+                  currentSession?.id === s.id ? 'bg-accent' : 'hover:bg-accent'
                 }`}
               >
                 {s.title || `이미지 ${s.id}`}

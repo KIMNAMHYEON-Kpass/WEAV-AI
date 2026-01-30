@@ -23,11 +23,11 @@ export function ChatInput() {
   };
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 p-4 bg-gray-900/95 border-t border-gray-700">
+    <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/95 border-t border-border">
       {error && (
-        <div className="max-w-3xl mx-auto mb-2 flex items-center justify-between rounded bg-red-900/50 text-red-200 px-3 py-2 text-sm">
+        <div className="max-w-3xl mx-auto mb-2 flex items-center justify-between rounded bg-destructive/50 text-destructive-foreground px-3 py-2 text-sm">
           <span>{error}</span>
-          <button type="button" onClick={clearError} className="hover:underline">
+          <button type="button" onClick={clearError} className="hover:text-primary">
             닫기
           </button>
         </div>
@@ -44,13 +44,13 @@ export function ChatInput() {
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
             placeholder={isChat ? '메시지를 입력하세요...' : '이미지 설명을 입력하세요...'}
-            className="flex-1 bg-gray-800 border border-gray-600 rounded px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="flex-1 bg-input border border-input rounded px-4 py-2 text-foreground placeholder-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
             disabled={sending}
           />
           <button
             type="submit"
             disabled={sending || !prompt.trim()}
-            className="px-4 py-2 rounded bg-blue-600 text-white font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-blue-500"
+            className="px-4 py-2 rounded bg-primary text-primary-foreground font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-primary/90"
           >
             {sending ? '처리 중...' : isChat ? '전송' : '생성'}
           </button>
