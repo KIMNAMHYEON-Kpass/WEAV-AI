@@ -1,96 +1,65 @@
-import React, { useRef, useEffect, useState, useMemo } from 'react';
-import { useParams } from 'react-router-dom';
+import React, { useEffect, useRef } from 'react';
+import { useApp } from '@/contexts/AppContext';
 import { ChatMessage } from './ChatMessage';
-import { WelcomeScreen } from './WelcomeScreen';
 import { ChatInput } from './ChatInput';
-import { useChatContext } from '../../contexts/ChatContext';
-import { useFolder } from '../../contexts/FolderContext';
-import { PromptTemplate } from '../../types';
 
-interface ChatViewProps {
-    hasStarted: boolean;
-    contentStyle: React.CSSProperties;
-    allPrompts: PromptTemplate[];
-}
+export function ChatView() {
+  const { currentSession } = useApp();
+  const endRef = useRef<HTMLDivElement>(null);
 
-export const ChatView: React.FC<ChatViewProps> = ({
-    hasStarted: initialHasStarted,
-    contentStyle,
-    allPrompts
-}) => {
-    const { id } = useParams<{ id: string }>();
-    const {
-        messages, inputValue, setInputValue, selectedModel, setSelectedModel,
-        isLoading, sendMessage, stopGeneration, loadChatSession, currentSessionId, hasStarted,
-        videoOptions, setVideoOptions, recentChats, imageEditTarget, clearImageEditTarget
-    } = useChatContext();
+  useEffect(() => {
+    endRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [currentSession?.messages, currentSession?.image_records]);
 
-    const [showPrompts, setShowPrompts] = useState(true);
-
-    // Get current session for recommended prompts
-    const { folderChats } = useFolder();
-    const currentSession = useMemo(() => {
-        if (!currentSessionId) return null;
-        if (id) {
-            // Find in folder chats
-            for (const folderId of Object.keys(folderChats)) {
-                const chat = folderChats[folderId]?.find(c => c.id === id);
-                if (chat) return chat;
-            }
-        }
-        return recentChats.find(c => c.id === currentSessionId) || null;
-    }, [currentSessionId, id, folderChats, recentChats]);
-
-    const messagesEndRef = useRef<HTMLDivElement>(null);
-
-    useEffect(() => {
-        if (id && id !== currentSessionId) {
-            console.log('[ChatDebug] ChatView loadChatSession', { id, currentSessionId, messages: messages.length, hasStarted });
-            loadChatSession(id);
-        }
-    }, [id, currentSessionId, loadChatSession]);
-
-    useEffect(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-        console.log('[ChatDebug] ChatView render', { messages: messages.length, hasStarted, currentSessionId });
-    }, [messages]);
-
-    const shouldShowMessages = hasStarted || messages.length > 0;
-
+  if (!currentSession) {
     return (
-        <>
-            <main className="flex-1 w-full max-w-5xl mx-auto flex flex-col relative z-10">
-                {!shouldShowMessages ? (
-                    <WelcomeScreen />
-                ) : (
-                    <div className="flex-1 overflow-y-auto px-4 pt-20 pb-40 custom-scrollbar">
-                        {messages.map((msg) => (
-                            <ChatMessage key={msg.id} message={msg} />
-                        ))}
-                        <div ref={messagesEndRef} />
-                    </div>
-                )}
-            </main>
-
-            <ChatInput
-                inputValue={inputValue}
-                onInputChange={setInputValue}
-                onSend={() => sendMessage()}
-                onStop={isLoading ? stopGeneration : undefined}
-                isLoading={isLoading}
-                selectedModel={selectedModel}
-                onModelSelect={setSelectedModel}
-                hasStarted={hasStarted}
-                widthStyle={contentStyle}
-                prompts={allPrompts}
-                videoOptions={videoOptions}
-                onVideoOptionsChange={setVideoOptions}
-                imageEditTarget={imageEditTarget}
-                onClearImageEditTarget={clearImageEditTarget}
-                recommendedPrompts={hasStarted && messages.length === 1 ? currentSession?.recommendedPrompts : undefined}
-                showRecommendedPrompts={hasStarted && messages.length === 1 && showPrompts && !!currentSession?.recommendedPrompts}
-                onCloseRecommendedPrompts={() => setShowPrompts(false)}
-            />
-        </>
+      <div className="flex-1 flex items-center justify-center text-gray-500">
+        <p>왼쪽 메뉴에서 새 채팅 또는 새 이미지를 시작하세요.</p>
+      </div>
     );
-};
+  }
+
+  const isChat = currentSession.kind === 'chat';
+  const messages = currentSession.messages ?? [];
+  const imageRecords = currentSession.image_records ?? [];
+
+  return (
+    <div className="flex-1 flex flex-col w-full max-w-3xl mx-auto">
+      <main className="flex-1 overflow-y-auto px-4 pt-6 pb-40">
+        {isChat ? (
+          messages.length === 0 ? (
+            <div className="text-center text-gray-500 py-12">
+              <p>메시지를 입력하고 전송하세요.</p>
+            </div>
+          ) : (
+            messages.map((msg) => <ChatMessage key={msg.id} message={msg} />)
+          )
+        ) : (
+          <>
+            {imageRecords.length === 0 && (
+              <div className="text-center text-gray-500 py-12">
+                <p>이미지 설명을 입력하고 생성하세요.</p>
+              </div>
+            )}
+            <div className="grid gap-4 sm:grid-cols-2">
+              {imageRecords.map((rec) => (
+                <div key={rec.id} className="rounded-lg overflow-hidden bg-gray-800">
+                  <img
+                    src={rec.image_url}
+                    alt={rec.prompt}
+                    className="w-full h-auto object-cover"
+                  />
+                  <p className="p-2 text-sm text-gray-400 truncate" title={rec.prompt}>
+                    {rec.prompt}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+        <div ref={endRef} />
+      </main>
+      <ChatInput />
+    </div>
+  );
+}

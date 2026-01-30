@@ -82,7 +82,6 @@ infra/minio-data/
 **/*firebase*service*.json
 **/*-firebase-admin*.json
 **/*firebase-adminsdk*.json
-docs/llms.pdf
 backend/weavai/apps/ai/system_rules.py
 infra/package-lock.json
 
