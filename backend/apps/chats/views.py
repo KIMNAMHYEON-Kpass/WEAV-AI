@@ -1,7 +1,7 @@
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from .models import Session, Message, ImageRecord, SESSION_KIND_CHAT, SESSION_KIND_IMAGE
+from .models import Session, Message, ImageRecord, SESSION_KIND_CHAT, SESSION_KIND_IMAGE, SESSION_KIND_STUDIO
 from .serializers import SessionListSerializer, SessionDetailSerializer, MessageSerializer, ImageRecordSerializer
 
 
@@ -10,13 +10,13 @@ def session_list(request):
     if request.method == 'GET':
         kind = request.query_params.get('kind')
         qs = Session.objects.all()
-        if kind in (SESSION_KIND_CHAT, SESSION_KIND_IMAGE):
+        if kind in (SESSION_KIND_CHAT, SESSION_KIND_IMAGE, SESSION_KIND_STUDIO):
             qs = qs.filter(kind=kind)
         serializer = SessionListSerializer(qs, many=True)
         return Response(serializer.data)
     kind = request.data.get('kind', SESSION_KIND_CHAT)
     title = request.data.get('title', '')[:255]
-    if kind not in (SESSION_KIND_CHAT, SESSION_KIND_IMAGE):
+    if kind not in (SESSION_KIND_CHAT, SESSION_KIND_IMAGE, SESSION_KIND_STUDIO):
         kind = SESSION_KIND_CHAT
     session = Session.objects.create(kind=kind, title=title or f'{kind} session')
     return Response(SessionListSerializer(session).data, status=status.HTTP_201_CREATED)
